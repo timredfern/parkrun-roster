@@ -6,7 +6,9 @@
 FROM node:24-slim AS build
 WORKDIR /app
 COPY package.json package-lock.json ./
-RUN npm ci
+# `npm install` (not `npm ci`): the committed lockfile is generated on macOS and omits
+# Linux-only optional deps (@emnapi/*), which makes strict `npm ci` fail on a Linux build.
+RUN npm install --no-audit --no-fund
 COPY . .
 RUN npm run build
 RUN npm prune --omit=dev
