@@ -1,0 +1,68 @@
+/* Thin layer on top of Pico (which handles typography, forms, tables, buttons). */
+
+:root {
+  --accent: #3e3e78;
+  --pico-font-size: 106%; /* a touch larger for legibility */
+}
+
+/* Full-width dark header bar (kept outside Pico's element styling). */
+header.site {
+  background: var(--accent);
+  color: #fff;
+  padding: 0.7rem 1rem;
+  margin-bottom: 1.25rem;
+}
+header.site .inner {
+  max-width: 820px;
+  margin: 0 auto;
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem 1.25rem;
+  flex-wrap: wrap;
+}
+header.site strong { font-size: 1.05rem; }
+header.site nav a { color: #fff; opacity: 0.85; text-decoration: none; margin-right: 1rem; }
+header.site nav a:hover { opacity: 1; text-decoration: underline; }
+
+main { max-width: 820px; margin: 0 auto; padding: 0 1rem 4rem; }
+
+.muted { color: var(--pico-muted-color); }
+.small { font-size: 0.85rem; }
+
+.cards { display: flex; gap: 1rem; flex-wrap: wrap; margin: 1rem 0; }
+.card {
+  border: 1px solid var(--pico-muted-border-color);
+  border-radius: var(--pico-border-radius);
+  padding: 1rem 1.25rem;
+  flex: 1 1 150px;
+}
+.card .n { font-size: 2rem; font-weight: 700; line-height: 1.1; }
+
+.badge {
+  display: inline-block; font-size: 0.7rem; font-weight: 700;
+  padding: 0.05rem 0.45rem; border-radius: 999px;
+  background: #e6e6f5; color: var(--accent); vertical-align: middle;
+}
+
+.box {
+  border: 1px solid var(--pico-muted-border-color);
+  border-radius: var(--pico-border-radius);
+  padding: 0.75rem 1rem; margin: 1rem 0;
+}
+.box.warn { background: #fff5e6; border-color: #f0c36d; }
+.box.ok { background: #eafaf0; border-color: #8fd6a8; }
+.box ul { margin: 0.25rem 0 0; padding-left: 1.1rem; }
+
+.week {
+  border: 1px solid var(--pico-muted-border-color);
+  border-radius: var(--pico-border-radius);
+  padding: 0.6rem 0.9rem; margin: 0.6rem 0;
+}
+.week .jobs { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem 0.6rem; margin: 0.6rem 0 0 1.5rem; }
+.week .jobs select { width: auto; min-width: 12rem; margin: 0; }
+.week .jobs .addjob { width: auto; margin: 0; padding: 0.3rem 0.7rem; font-size: 0.85rem; }
+
+/* Tables scroll rather than overflow the page on narrow screens. */
+.ok-text { color: #2e7d4f; font-weight: 600; }
+.tablewrap { overflow-x: auto; }
+td.role { font-weight: 600; white-space: nowrap; }

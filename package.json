@@ -1,0 +1,29 @@
+{
+  "name": "parkrun-roster",
+  "private": true,
+  "version": "0.0.1",
+  "type": "module",
+  "scripts": {
+    "dev": "vite dev",
+    "build": "vite build",
+    "preview": "vite preview",
+    "prepare": "svelte-kit sync || echo ''",
+    "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
+    "gen": "tsx scripts/cli.ts",
+    "test": "tsx test/backtest.test.ts"
+  },
+  "devDependencies": {
+    "@sveltejs/adapter-auto": "^7.0.1",
+    "@sveltejs/kit": "^2.63.0",
+    "@sveltejs/vite-plugin-svelte": "^7.1.2",
+    "@types/node": "^22.0.0",
+    "svelte": "^5.56.1",
+    "svelte-check": "^4.6.0",
+    "tsx": "^4.19.0",
+    "typescript": "^6.0.3",
+    "vite": "^8.0.16"
+  },
+  "dependencies": {
+    "@picocss/pico": "^2.1.1"
+  }
+}

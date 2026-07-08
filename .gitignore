@@ -1,0 +1,23 @@
+# dependencies / build output
+node_modules/
+.svelte-kit/
+build/
+*.tsbuildinfo
+
+# runtime database — PERSONAL DATA, never commit
+data/
+*.db
+*.db-shm
+*.db-wal
+
+# saved EMS pages — PERSONAL DATA (names + barcodes)
+Volunteer Rosters _ EMS*.html
+Volunteer Rosters _ EMS*_files/
+
+# real poll fixtures contain real names + barcodes — PERSONAL DATA
+# (the test suite reads these locally; see note in README)
+scenarios/
+
+# local editor / OS / tooling
+.DS_Store
+.claude/settings.local.json
