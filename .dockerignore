@@ -1,0 +1,19 @@
+# build context hygiene — keep the image small and free of personal data
+node_modules
+.svelte-kit
+build
+.git
+.gitignore
+
+# personal data must never enter the image
+data
+*.db
+*.db-shm
+*.db-wal
+Volunteer Rosters _ EMS*.html
+Volunteer Rosters _ EMS*_files
+scenarios
+
+# local / editor
+.DS_Store
+.claude
