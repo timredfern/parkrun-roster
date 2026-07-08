@@ -18,6 +18,9 @@ Volunteer Rosters _ EMS*_files/
 # (the test suite reads these locally; see note in README)
 scenarios/
 
+# deploy secrets / local config
+.env
+
 # local editor / OS / tooling
 .DS_Store
 .claude/settings.local.json

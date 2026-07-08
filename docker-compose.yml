@@ -2,20 +2,16 @@ services:
   roster:
     build: .
     restart: always
-    # nginx in the webserver LXC proxies to http://10.176.70.1:8091
-    # (8091 chosen to avoid Immich 2283 / PeerTube 9000).
+    # Host port -> container's fixed 3000. Set ROSTER_PORT in .env.
     ports:
-      - "8091:3000"
+      - '${ROSTER_PORT:-8091}:3000'
     environment:
-      # REQUIRED behind the reverse proxy — without it SvelteKit rejects form POSTs
-      # (the poll + generate) as cross-origin (403). Must match the public URL.
-      - ORIGIN=https://roster.eclectronics.org
+      # Public URL (scheme + host, no trailing slash). REQUIRED behind a reverse proxy, or
+      # SvelteKit rejects the poll/generate form POSTs as cross-origin (403).
+      - ORIGIN=${ORIGIN:?set ORIGIN in .env (e.g. https://roster.example.org)}
       - ROSTER_DB=/data/roster.db
       # allow the EMS "Save Page As" upload (adapter-node default body limit is ~512kb)
       - BODY_SIZE_LIMIT=5M
     volumes:
-      # SQLite DB persists here across rebuilds.
-      # NOTE: /tank/roster is NOT in Borg's backup set (it backs up /tank/{git,www,mail,photos}).
-      # To back up the roster DB, either mount under a backed-up dataset (e.g. /tank/www/roster)
-      # or add /tank/roster to borg-backup.sh. This DB is the one irreplaceable thing.
-      - /tank/roster:/data
+      # Host directory for the SQLite DB (persists across rebuilds). Back this up.
+      - '${ROSTER_DB_DIR:-./data}:/data'

@@ -32,7 +32,19 @@ locally:
 Because of this, `npm test` only runs where those local fixtures are present. *(TODO: anonymised
 fixtures so tests can run in CI.)*
 
+## Deploy
+
+Runs as a Docker container (SvelteKit `adapter-node`). Stateless apart from the SQLite DB volume,
+so put it behind any reverse proxy that terminates TLS and forwards the standard headers.
+
+```bash
+cp .env.example .env      # set ORIGIN (public URL), ROSTER_PORT, ROSTER_DB_DIR
+docker compose up -d --build
+```
+
+Point the reverse proxy at the published port. **`ORIGIN` must match the public URL** or form POSTs
+are rejected (SvelteKit CSRF). Back up the DB volume — it's the only stateful thing.
+
 ## Stack
 
-SvelteKit + Node's built-in SQLite (no native build). Deploy target: `adapter-node` behind nginx
-(see `DESIGN.md §7`).
+SvelteKit + Node's built-in SQLite (no native build). See [`DESIGN.md`](DESIGN.md) for the design.
