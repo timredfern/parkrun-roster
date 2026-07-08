@@ -48,9 +48,6 @@ export const SANCTIONED_DOUBLES = new Set<string>(['1-13', '15-34', '11-15', '2-
 // Roles exempt from the "no two concurrent roles" concern (post-event / operator).
 export const CONCURRENCY_EXEMPT = new Set<number>([RP_TID, VC_TID]);
 
-// Results Processor soft preference (athlete ids): Yvonne PETERS HILL, Shauna FEERICK.
-export const RESULTS_PROCESSOR_PREF = new Set<number>([5335793, 5394416]);
-
 export function pairKey(a: number, b: number): string {
   return a < b ? `${a}-${b}` : `${b}-${a}`;
 }
