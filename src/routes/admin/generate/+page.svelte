@@ -10,7 +10,7 @@
 {:else}
   <form method="GET" style="margin-bottom:1rem">
     <label>Week:
-      <select name="date">
+      <select name="date" onchange={(e) => e.currentTarget.form?.requestSubmit()}>
         {#each data.weeks as w (w.date)}
           <option value={w.date} selected={w.date === data.date}>
             {w.label} — {w.count ? `${w.count} responded` : 'no responses yet'}
@@ -18,7 +18,6 @@
         {/each}
       </select>
     </label>
-    <button class="secondary" type="submit">Load</button>
   </form>
 
   <form method="POST" action="?/generate">

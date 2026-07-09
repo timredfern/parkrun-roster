@@ -123,6 +123,21 @@ console.log('synthetic fixture — rules & invariants (always runs):');
     test('flags Run Director / need more people', () =>
       assert.ok(r.warnings.some((w) => /Run Director|more volunteers/.test(w)), r.warnings.join(' | ')));
   }
+
+  // Rotation: for a role two people could do, prefer the one who hasn't done it recently.
+  // Marshal (7) history: Gus(1000007) then Lee(1000012); Cara(1000003) never did it.
+  {
+    const r = generateRoster({
+      registry: reg,
+      available: [{ athleteId: 1000012 }, { athleteId: 1000003 }],
+      targetDate: date,
+      template: [7],
+      seed: 12345,
+    });
+    console.log(' rotation:');
+    test('role goes to the person not-recently-doing it', () =>
+      assert.equal(r.assignments.find((a) => a.tid === 7)?.athleteId, 1000003));
+  }
 }
 
 // ============ Tier 2: real data from data/ (skipped if absent) ============

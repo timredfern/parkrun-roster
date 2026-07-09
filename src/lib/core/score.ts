@@ -1,5 +1,6 @@
 import type { Registry, Volunteer } from './registry.ts';
 import { fullName } from './registry.ts';
+import type { HistoryEntry } from './parse.ts';
 import {
   CONCURRENCY_EXEMPT,
   isSanctionedDouble,
@@ -10,11 +11,11 @@ import {
   STANDARD_TEMPLATE,
 } from './rules.ts';
 
-// POLICY: honour explicit requests first, then fill the rest at random within the HARD rules.
-// One person may only hold two during-run roles if they form a SANCTIONED pair (RD+Finish Tokens;
-// First Timers Welcome + Course Check/Barcode/Timekeeper). Any other double is physically
-// impossible (can't be in two places during the run), so it's never produced — the role is left
-// UNFILLED and surfaced as "need more people". No rotation scoring — randomness gives variety.
+// POLICY: requests first, then ROTATE. An explicit request is honoured whenever feasible; the
+// remaining slots go to whoever is most "due" for that role (hasn't done it recently, per the
+// saved history), so roles rotate around the pool over time. Hard rules on top: a second
+// during-run role is only possible as a SANCTIONED pair (else impossible → left unfilled + "need
+// more people"); ≤2 during-run roles/person; Run Director only from the RD-eligible set.
 
 export interface Availability {
   athleteId: number;
@@ -37,10 +38,13 @@ export interface RosterResult {
   restarts: number;
 }
 
-const W_REQUEST = 1500;
+const W_REQUEST = 1500; // dominant — a feasible request always wins its slot
 const W_UNFILLED = -3000; // per empty mandatory slot (applied to the total)
 const W_SANCTIONED_DBL = -20; // mild nudge to prefer a fresh person over a legal double
 const W_EXTRA_LOAD = -120; // per role already held (keeps people single until we must double)
+const W_ROTATION_PER_WEEK = 2; // reward weeks since the person last did this role
+const W_NEVER_DID = 15; // bonus for a role the person has never done
+const ROTATION_CAP_WEEKS = 26;
 
 function mulberry32(seed: number): () => number {
   let a = seed >>> 0;
@@ -53,25 +57,71 @@ function mulberry32(seed: number): () => number {
   };
 }
 
+interface PersonStats {
+  lastDateForRole: Map<number, string>;
+  timesForRole: Map<number, number>;
+}
+
+function computeStats(history: HistoryEntry[]): Map<number, PersonStats> {
+  const stats = new Map<number, PersonStats>();
+  for (const e of history) {
+    let s = stats.get(e.athleteId);
+    if (!s) stats.set(e.athleteId, (s = { lastDateForRole: new Map(), timesForRole: new Map() }));
+    const prev = s.lastDateForRole.get(e.tid);
+    if (!prev || e.date > prev) s.lastDateForRole.set(e.tid, e.date);
+    s.timesForRole.set(e.tid, (s.timesForRole.get(e.tid) ?? 0) + 1);
+  }
+  return stats;
+}
+
+const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
+function weeksSince(from: string | undefined, target: string): number {
+  if (!from) return ROTATION_CAP_WEEKS; // never done → maximally due
+  const diff = (Date.parse(target) - Date.parse(from)) / WEEK_MS;
+  if (Number.isNaN(diff)) return ROTATION_CAP_WEEKS;
+  return Math.max(0, Math.min(ROTATION_CAP_WEEKS, diff));
+}
+
 interface Breakdown {
   score: number;
   reasons: string[];
 }
 
-function scoreCandidate(tid: number, avail: Availability | undefined, assignedTids: number[]): Breakdown {
+function scoreCandidate(
+  tid: number,
+  avail: Availability | undefined,
+  assignedTids: number[],
+  stats: PersonStats | undefined,
+  target: string,
+): Breakdown {
   const reasons: string[] = [];
   let score = 0;
 
-  // A `prefer` list means "any ONE of these is fine" — honour at most one per person.
+  // Requests dominate (honour at most one per person: "Marshal or Tail Walker" = one of them).
   const preferred = avail?.prefer ?? [];
   const alreadyGotPreferred = assignedTids.some((t) => preferred.includes(t));
-  if (preferred.includes(tid) && !alreadyGotPreferred) {
+  const requested = preferred.includes(tid) && !alreadyGotPreferred;
+  if (requested) {
     score += W_REQUEST;
     reasons.push('requested');
   }
 
-  // Any second during-run role reaching here is a sanctioned pair (non-sanctioned is filtered out
-  // as ineligible before scoring).
+  // Rotation: reward people who haven't done this role recently.
+  const wk = weeksSince(stats?.lastDateForRole.get(tid), target);
+  score += wk * W_ROTATION_PER_WEEK;
+  const times = stats?.timesForRole.get(tid) ?? 0;
+  if (!requested) {
+    if (times === 0) {
+      score += W_NEVER_DID;
+      reasons.push('new to this role');
+    } else if (wk >= 8) {
+      reasons.push(`not done in ${Math.round(wk)}wk`);
+    } else {
+      reasons.push('available');
+    }
+  }
+
+  // Any second during-run role reaching here is a sanctioned pair (non-sanctioned is filtered out).
   if (!CONCURRENCY_EXEMPT.has(tid)) {
     for (const other of assignedTids) {
       if (CONCURRENCY_EXEMPT.has(other)) continue;
@@ -81,7 +131,6 @@ function scoreCandidate(tid: number, avail: Availability | undefined, assignedTi
   }
   if (assignedTids.length > 0) score += W_EXTRA_LOAD * assignedTids.length;
 
-  if (reasons.length === 0) reasons.push('available');
   return { score, reasons };
 }
 
@@ -96,6 +145,8 @@ export function generateRoster(opts: {
   const template = opts.template ?? STANDARD_TEMPLATE;
   const restarts = opts.restarts ?? 300;
   const rng = mulberry32(opts.seed ?? 12345);
+  // Only weeks BEFORE the target count for rotation.
+  const stats = computeStats(opts.registry.history.filter((e) => e.date < opts.targetDate));
 
   const availById = new Map<number, Availability>();
   for (const a of opts.available) availById.set(a.athleteId, a);
@@ -136,12 +187,10 @@ export function generateRoster(opts: {
         if (thisDuringRun) {
           const held = (assignedByPerson.get(v.athleteId) ?? []).filter((t) => !CONCURRENCY_EXEMPT.has(t));
           if (held.length >= MAX_ROLES_PER_PERSON) continue; // physical cap
-          // HARD: a second during-run role is only possible as a sanctioned pair — otherwise the
-          // person can't physically do both, so they're ineligible and the slot may go unfilled.
-          if (!held.every((other) => isSanctionedDouble(other, tid))) continue;
+          if (!held.every((other) => isSanctionedDouble(other, tid))) continue; // sanctioned pairs only
         }
-        const b = scoreCandidate(tid, av, assignedByPerson.get(v.athleteId) ?? []);
-        const s = b.score + rng() * 10; // jitter = the "random" among otherwise-equal candidates
+        const b = scoreCandidate(tid, av, assignedByPerson.get(v.athleteId) ?? [], stats.get(v.athleteId), opts.targetDate);
+        const s = b.score + rng() * 4; // small jitter breaks ties among equally-due people
         if (!bestCand || s > bestCand.s) bestCand = { v, b, s };
       }
 
@@ -166,7 +215,6 @@ export function generateRoster(opts: {
     return { slotIndex, tid, athleteId: c.athleteId, name: v ? fullName(v) : `A${c.athleteId}`, rationale: c.reasons.join('; ') };
   });
 
-  // Warnings — when short, the honest answer is "need more people", not an impossible double.
   const warnings: string[] = [];
   const distinctPeople = new Set(assignments.filter((a) => a.athleteId != null).map((a) => a.athleteId)).size;
   const unfilled = assignments.filter((a) => a.athleteId == null);
