@@ -102,7 +102,7 @@ export const actions: Actions = {
     const entries = weeks.map((date) => ({
       date,
       available: !!form.get(`avail_${date}`),
-      prefer: form.getAll(`job_${date}`).filter((v) => v !== '').map(Number),
+      prefer: form.getAll(`role_${date}`).filter((v) => v !== '').map(Number),
     }));
     savePoll({ athleteId, first: first || '?', last: last || '?', entries });
 

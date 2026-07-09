@@ -26,7 +26,7 @@
     <div class="tablewrap">
     <table>
       <thead>
-        <tr><th>Available</th><th>Volunteer</th><th>Requested job</th></tr>
+        <tr><th>Available</th><th>Volunteer</th><th>Requested role</th></tr>
       </thead>
       <tbody>
         {#each data.volunteers as v (v.athleteId)}
@@ -57,29 +57,22 @@
   <p class="small muted">Adjust any assignment if you like, then confirm. (Warnings below reflect the auto-generated draft.)</p>
   <form method="POST" action="?/confirm">
     <input type="hidden" name="date" value={g.date} />
-    <div class="tablewrap">
-      <table>
-        <thead><tr><th>Job</th><th>Person</th><th>Why</th></tr></thead>
-        <tbody>
-          {#each g.rows as r, i (i)}
-            <tr>
-              <td class="role">{r.role}</td>
-              <td>
-                <input type="hidden" name={`tid_${i}`} value={r.tid} />
-                <select name={`slot_${i}`}>
-                  <option value="">— unfilled —</option>
-                  {#each data.volunteers as v (v.athleteId)}
-                    <option value={v.athleteId} selected={v.athleteId === r.athleteId}>{v.name}</option>
-                  {/each}
-                </select>
-              </td>
-              <td class="muted small">{r.rationale}</td>
-            </tr>
-          {/each}
-        </tbody>
-      </table>
+    <div class="draft">
+      {#each g.rows as r, i (i)}
+        <div class="draftrow">
+          <input type="hidden" name={`tid_${i}`} value={r.tid} />
+          <div class="draftrole">{r.role}</div>
+          <select name={`slot_${i}`}>
+            <option value="">— unfilled —</option>
+            {#each data.volunteers as v (v.athleteId)}
+              <option value={v.athleteId} selected={v.athleteId === r.athleteId}>{v.name}</option>
+            {/each}
+          </select>
+          {#if r.rationale}<div class="muted small">{r.rationale}</div>{/if}
+        </div>
+      {/each}
     </div>
-    <p class="small muted">{g.filled}/{g.total} jobs filled · {g.distinct} distinct people (before edits)</p>
+    <p class="small muted">{g.filled}/{g.total} roles filled · {g.distinct} distinct people (before edits)</p>
 
     {#if g.warnings.length}
       <div class="box warn"><strong>Warnings</strong><ul>{#each g.warnings as w}<li>{w}</li>{/each}</ul></div>

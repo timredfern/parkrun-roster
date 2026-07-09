@@ -19,7 +19,7 @@
 
   <div class="tablewrap">
     <table>
-      <thead><tr><th>Job</th><th>Person</th></tr></thead>
+      <thead><tr><th>Role</th><th>Person</th></tr></thead>
       <tbody>
         {#each data.roster as r (r.role + r.athleteId)}
           <tr><td class="role">{r.role}</td><td>{r.name} <span class="muted small">A{r.athleteId}</span></td></tr>

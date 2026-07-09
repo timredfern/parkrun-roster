@@ -42,7 +42,7 @@ function db(): DatabaseSync {
     CREATE TABLE IF NOT EXISTS poll_requests (
       date        TEXT NOT NULL,
       athlete_id  INTEGER NOT NULL,
-      tid         INTEGER NOT NULL,  -- a requested job for that week
+      tid         INTEGER NOT NULL,  -- a requested role for that week
       PRIMARY KEY (date, athlete_id, tid)
     );
   `);
@@ -205,7 +205,7 @@ export function savePoll(sub: PollSubmission): void {
   }
 }
 
-// Who's available for a given Saturday, with their requested jobs (from the poll).
+// Who's available for a given Saturday, with their requested roles (from the poll).
 export function getPollForDate(date: string): { athleteId: number; prefer: number[] }[] {
   const d = db();
   const rows = d

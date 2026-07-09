@@ -57,7 +57,7 @@ export const actions: Actions = {
     const date = String(form.get('date') || nextSaturday());
     const ids = form.getAll('available').map(Number);
 
-    // Requests come from the poll (a person may nominate several jobs); the coordinator's
+    // Requests come from the poll (a person may nominate several roles); the coordinator's
     // checkboxes only decide who's in.
     const poll = getPollForDate(date);
     const prefById = new Map(poll.map((p) => [p.athleteId, p.prefer]));

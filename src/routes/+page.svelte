@@ -5,10 +5,10 @@
 
   let dialog = $state<HTMLDialogElement>();
 
-  // per-week job dropdowns (0 by default; "+ request role" adds one)
-  let jobSlots = $state<Record<string, number>>({});
-  const slotsFor = (d: string) => jobSlots[d] ?? 0;
-  const addJob = (d: string) => (jobSlots[d] = slotsFor(d) + 1);
+  // per-week role dropdowns (0 by default; "+ request role" adds one)
+  let roleSlots = $state<Record<string, number>>({});
+  const slotsFor = (d: string) => roleSlots[d] ?? 0;
+  const addRole = (d: string) => (roleSlots[d] = slotsFor(d) + 1);
 
   // barcode lookup: only ask for a name when it's unknown
   let lookup = $state<{ known: boolean; name: string | null } | null>(null);
@@ -86,16 +86,16 @@
         {#each data.weeks as w (w.date)}
           <div class="week">
             <label class="wk"><input type="checkbox" name={`avail_${w.date}`} /> <strong>{w.label}</strong></label>
-            <div class="jobs">
+            <div class="roles">
               {#each Array(slotsFor(w.date)) as _, i (i)}
-                <select name={`job_${w.date}`}>
+                <select name={`role_${w.date}`}>
                   <option value="">— choose a role —</option>
                   {#each data.roles as r (r.tid)}
                     <option value={r.tid}>{r.name}</option>
                   {/each}
                 </select>
               {/each}
-              <button type="button" class="secondary addjob" onclick={() => addJob(w.date)}>+ request role</button>
+              <button type="button" class="secondary addrole" onclick={() => addRole(w.date)}>+ request role</button>
             </div>
           </div>
         {/each}
