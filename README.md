@@ -14,7 +14,7 @@ More detail: [`DESIGN.md`](DESIGN.md) (design + decisions), [`STATUS.md`](STATUS
 npm install
 npm run dev      # http://localhost:5173
 npm run check    # typecheck (svelte-check)
-npm test         # generator regression tests (needs local fixtures — see below)
+npm test         # generator regression tests (synthetic fixtures; real-data tier if data/ present)
 ```
 
 The database is a local SQLite file (default `data/roster.db`; override with `ROSTER_DB`).
@@ -29,8 +29,9 @@ locally:
 - `Volunteer Rosters _ EMS*.html` — saved EMS pages used to seed it
 - `scenarios/*.json` — real poll fixtures the test suite reads
 
-Because of this, `npm test` only runs where those local fixtures are present. *(TODO: anonymised
-fixtures so tests can run in CI.)*
+`npm test` runs everywhere against **committed synthetic fixtures** (`test/fixtures/`, fake
+people/barcodes); the richer real-data backtest is an extra tier that runs only when the `data/`
+EMS pages are present locally, and skips otherwise.
 
 ## Deploy
 
