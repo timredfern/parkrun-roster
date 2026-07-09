@@ -89,9 +89,10 @@ post-event RP.)
   + years of history; no need to run Postgres on the 8GB host.
 - **Deployment** on the eclectronics.org box at **`roster.eclectronics.org`**, behind the
   existing nginx reverse proxy + Cloudflare DNS + certbot.
-  - **Open:** Docker (matches Immich/PeerTube; clean rebuild/redeploy loop — *leaning this way*)
-    vs LXC/LXD (matches gitea/navidrome; own macvlan IP; install-once). Deploy-time decision;
-    does not affect application code. Settle when we reach deployment.
+  - **Decided: Docker** (matches Immich/PeerTube; clean rebuild/redeploy loop). `adapter-node`
+    image on the host (port 8091), reverse-proxied by nginx in the webserver LXC. DB volume on
+    `/tank/www/roster` (inside the Borg backup set). Config via `.env`. Deploy scripts + checklist
+    live in the `selfhostingsetup` repo (`roster/`).
 
 ---
 
@@ -183,10 +184,11 @@ random restarts, keeping the best-scoring valid roster. Debuggable and instant.
   during-run roles ONLY as a sanctioned pair** (§2.5) — any other double is impossible, so the
   role is left unfilled rather than double-booked; ≤ 2 during-run roles per person; Run Director
   only from `rd_eligible ∪ override`. Headcount floors at **7 people** via sanctioned doubling.
-- **Assignment policy:** *requests first, then random* — an explicit request is honoured whenever
-  feasible (at most one per person: "Marshal or Tail Walker" = one of them), and the rest are
-  filled at random among eligible people (randomness supplies week-to-week variety). `avoid` is a
-  hard exclusion. No rotation scoring.
+- **Assignment policy:** *requests first, then rotate* — an explicit request is honoured whenever
+  feasible (at most one per person: "Marshal or Tail Walker" = one of them), and the rest go to
+  whoever is most **due** for the role (hasn't done it recently, per saved history before the target
+  date), with a small random tie-break. `avoid` is a hard exclusion. Confirmed rosters are written
+  back to history, so each week feeds the next week's rotation.
 - **Warnings:** roles that can't be filled → "you need more volunteers"; fewer than 7 distinct
   people. (Non-sanctioned doubles can't occur, so there's no warning for them — they simply never
   happen.)
@@ -195,18 +197,21 @@ random restarts, keeping the best-scoring valid roster. Debuggable and instant.
 
 ---
 
-## 7. Build order
+## 7. Build order / status
 
-1. **Generator core (first)** — pure TS modules, no server/DB/Docker:
-   `parse` (EMS HTML → records) → `registry`/`history` (merge saves) → `rules` (config) →
-   `score` (assignment) → a CLI runner. **Validated against the real saved weeks** with a
-   hardcoded availability list. *This is what we build now.*
-2. **Persistence** — SQLite; import saved EMS pages; store registry/history/poll.
-3. **Poll** — web flow: volunteers submit availability + prefs; pick-your-name from the known
-   registry (only genuinely new people type name + barcode); consent/privacy notice (GDPR).
-4. **Coordinator UI** — upload EMS save, generate proposal, tweak, export for manual EMS entry.
-5. **Deploy** — Docker-or-LXC on the host, nginx proxy at `roster.eclectronics.org`, certbot,
-   SQLite file on `/tank` for backup.
+**See `STATUS.md` for exactly how the built system works.** Progress:
+
+1. ✅ **Generator core** — `parse` → `registry`/`history` → `rules` → `score`. Requests-first-then-
+   rotate; sanctioned-doubles hard rule; unfilled + "need more people" when short.
+2. ✅ **Persistence** — SQLite (Node built-in), import saved EMS pages, store registry/history/
+   availability/poll_requests; confirmed rosters saved back to history.
+3. ✅ **Poll** — barcode-first web poll (monthly, popup, per-week role requests, consent).
+4. ✅ **Coordinator UI** — `/admin/import` (Save-Page-As upload) + `/admin/generate` (pick week →
+   generate → confirm & save).
+5. ✅ **Deploy** — Docker + `adapter-node` behind nginx at `roster.eclectronics.org`.
+
+**Remaining:** review stored rosters (browse past confirmed rosters); tweak a draft before
+confirming; authentication on `/admin`.
 
 ---
 
