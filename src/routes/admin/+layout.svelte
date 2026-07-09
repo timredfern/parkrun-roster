@@ -4,6 +4,7 @@
 
 <nav class="adminnav">
   <a href="/admin/generate">Generate</a>
+  <a href="/admin/rosters">Saved rosters</a>
   <a href="/admin/import">Import EMS</a>
   <a href="/">← View site</a>
 </nav>

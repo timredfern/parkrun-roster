@@ -7,7 +7,7 @@
 </script>
 
 <header class="site">
-  <div class="inner"><strong>{data.eventName} · Roster</strong></div>
+  <div class="inner"><a href="/" class="brand"><strong>{data.eventName} · Roster</strong></a></div>
 </header>
 
 <main>

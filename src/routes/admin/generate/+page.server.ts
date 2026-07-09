@@ -73,19 +73,24 @@ export const actions: Actions = {
       name: a.name,
       rationale: a.rationale,
     }));
-    const slots = rows.filter((r) => r.athleteId != null).map((r) => ({ tid: r.tid, athleteId: r.athleteId }));
-    const distinct = new Set(slots.map((s) => s.athleteId)).size;
+    const filled = rows.filter((r) => r.athleteId != null);
+    const distinct = new Set(filled.map((r) => r.athleteId)).size;
 
     return {
-      generated: { date, rows, warnings: result.warnings, distinct, filled: slots.length, total: rows.length },
-      slotsJson: JSON.stringify(slots),
+      generated: { date, rows, warnings: result.warnings, distinct, filled: filled.length, total: rows.length },
     };
   },
 
+  // Save the (possibly hand-tweaked) draft. Each slot is a tid_<i>/slot_<i> pair from the form.
   confirm: async ({ request }) => {
     const form = await request.formData();
     const date = String(form.get('date'));
-    const slots = JSON.parse(String(form.get('slots'))) as { tid: number; athleteId: number }[];
+    const slots: { tid: number; athleteId: number }[] = [];
+    for (let i = 0; form.get(`tid_${i}`) !== null; i++) {
+      const tid = Number(form.get(`tid_${i}`));
+      const raw = form.get(`slot_${i}`);
+      if (raw) slots.push({ tid, athleteId: Number(raw) });
+    }
     confirmRoster(date, slots);
     return { confirmed: true, date, count: slots.length };
   },

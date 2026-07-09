@@ -54,35 +54,40 @@
 
 {#if g}
   <h2>Draft for {g.date}</h2>
-  <div class="tablewrap">
-  <table>
-    <thead><tr><th>Job</th><th>Person</th><th>Why</th></tr></thead>
-    <tbody>
-      {#each g.rows as r (r.role + (r.athleteId ?? 'x'))}
-        <tr>
-          <td class="role">{r.role}</td>
-          <td>{r.name ?? '— unfilled —'}</td>
-          <td class="muted small">{r.rationale}</td>
-        </tr>
-      {/each}
-    </tbody>
-  </table>
-  </div>
-  <p class="small muted">{g.filled}/{g.total} jobs filled · {g.distinct} distinct people</p>
-
-  {#if g.warnings.length}
-    <div class="box warn">
-      <strong>Warnings</strong>
-      <ul>{#each g.warnings as w}<li>{w}</li>{/each}</ul>
-    </div>
-  {:else}
-    <div class="box ok">No warnings.</div>
-  {/if}
-
+  <p class="small muted">Adjust any assignment if you like, then confirm. (Warnings below reflect the auto-generated draft.)</p>
   <form method="POST" action="?/confirm">
     <input type="hidden" name="date" value={g.date} />
-    <input type="hidden" name="slots" value={form?.slotsJson} />
-    <button type="submit" disabled={g.filled === 0}>Confirm &amp; save this roster</button>
-    <span class="muted small">Saves it as history and (you) enter it into EMS.</span>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Job</th><th>Person</th><th>Why</th></tr></thead>
+        <tbody>
+          {#each g.rows as r, i (i)}
+            <tr>
+              <td class="role">{r.role}</td>
+              <td>
+                <input type="hidden" name={`tid_${i}`} value={r.tid} />
+                <select name={`slot_${i}`}>
+                  <option value="">— unfilled —</option>
+                  {#each data.volunteers as v (v.athleteId)}
+                    <option value={v.athleteId} selected={v.athleteId === r.athleteId}>{v.name}</option>
+                  {/each}
+                </select>
+              </td>
+              <td class="muted small">{r.rationale}</td>
+            </tr>
+          {/each}
+        </tbody>
+      </table>
+    </div>
+    <p class="small muted">{g.filled}/{g.total} jobs filled · {g.distinct} distinct people (before edits)</p>
+
+    {#if g.warnings.length}
+      <div class="box warn"><strong>Warnings</strong><ul>{#each g.warnings as w}<li>{w}</li>{/each}</ul></div>
+    {:else}
+      <div class="box ok">No warnings.</div>
+    {/if}
+
+    <p><button type="submit">Confirm &amp; save this roster</button>
+    <span class="muted small">Saves it to history; then enter it into EMS.</span></p>
   </form>
 {/if}

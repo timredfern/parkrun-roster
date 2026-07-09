@@ -16,7 +16,8 @@ and generates a draft weekly roster for a coordinator to review and enter into p
 - **`/lookup?barcode=`** — small JSON endpoint the poll uses to check if a barcode is known.
 - **`/admin`** — coordinator hub (unauthenticated for now), linking:
   - **`/admin/generate`** — pick a Saturday (auto-loads that week's poll responses) → **Generate
-    draft** → **Confirm & save**.
+    draft** → **tweak** any assignment (per-slot dropdown) → **Confirm & save**.
+  - **`/admin/rosters`** — browse previously saved (confirmed) rosters.
   - **`/admin/import`** — upload saved EMS pages to seed/reconcile.
 - A discreet **"Coordinator →"** link in the public footer.
 
@@ -66,8 +67,8 @@ next week's rotation and RD-eligibility.
 Saturdays → optionally request a role → consent → submit.
 
 **Coordinator:** once, `/admin/import` a Save-Page-As of the EMS Volunteer Rosters page to seed the
-registry + history. Each week: `/admin/generate` → pick the Saturday → review the draft + warnings →
-**Confirm & save** → type it into EMS.
+registry + history. Each week: `/admin/generate` → pick the Saturday → review the draft + warnings,
+tweak any slot → **Confirm & save** → type it into EMS. Past rosters are at `/admin/rosters`.
 
 ## Tests
 
@@ -84,8 +85,8 @@ lives in the `selfhostingsetup` repo (`roster/`).
 
 ## Not built yet
 
-- **Review stored rosters** — a UI to browse past confirmed rosters. *(planned)*
-- **Tweak a draft before confirming** — the draft is currently saved as generated; editing per-slot
-  before Confirm is *planned*.
-- **Auth** — none; `/admin` is reachable by URL. Needed before real data goes on the public
-  internet.
+- **Auth** — none; `/admin` is reachable by URL. Needed before real volunteer data goes on the
+  public internet.
+
+(Note: tweaking a saved roster re-runs no validation — a hand-edited slot is saved as-is, since
+it's a draft the coordinator types into EMS anyway.)

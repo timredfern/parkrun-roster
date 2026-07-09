@@ -21,6 +21,7 @@ header.site .inner {
   flex-wrap: wrap;
 }
 header.site strong { font-size: 1.05rem; }
+header.site .brand { color: #fff; text-decoration: none; }
 header.site nav a { color: #fff; opacity: 0.85; text-decoration: none; margin-right: 1rem; }
 header.site nav a:hover { opacity: 1; text-decoration: underline; }
 

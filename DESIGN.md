@@ -210,8 +210,10 @@ random restarts, keeping the best-scoring valid roster. Debuggable and instant.
    generate → confirm & save).
 5. ✅ **Deploy** — Docker + `adapter-node` behind nginx at `roster.eclectronics.org`.
 
-**Remaining:** review stored rosters (browse past confirmed rosters); tweak a draft before
-confirming; authentication on `/admin`.
+6. ✅ **Review saved rosters** (`/admin/rosters`) and **tweak a draft before confirming** (editable
+   per-slot on `/admin/generate`).
+
+**Remaining:** authentication on `/admin`.
 
 ---
 

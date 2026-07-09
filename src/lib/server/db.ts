@@ -228,3 +228,24 @@ export function pollCounts(): { date: string; n: number }[] {
     .prepare('SELECT date, COUNT(*) AS n FROM availability GROUP BY date ORDER BY date')
     .all() as { date: string; n: number }[];
 }
+
+// Dates that have a confirmed (generated-and-saved) roster, newest first.
+export function confirmedRosterDates(): string[] {
+  return (
+    db().prepare("SELECT DISTINCT date FROM history WHERE source = 'confirmed' ORDER BY date DESC").all() as {
+      date: string;
+    }[]
+  ).map((r) => r.date);
+}
+
+// The confirmed roster for a date: role task id + who, with names.
+export function getConfirmedRoster(date: string): { tid: number; athleteId: number; name: string }[] {
+  return db()
+    .prepare(
+      `SELECT h.tid AS tid, h.athlete_id AS athleteId, TRIM(COALESCE(v.first, '') || ' ' || COALESCE(v.last, '')) AS name
+       FROM history h LEFT JOIN volunteers v ON v.athlete_id = h.athlete_id
+       WHERE h.date = ? AND h.source = 'confirmed'
+       ORDER BY h.tid`,
+    )
+    .all(date) as { tid: number; athleteId: number; name: string }[];
+}
