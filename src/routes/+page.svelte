@@ -1,6 +1,9 @@
 <script lang="ts">
+  import { enhance } from '$app/forms';
   let { data, form } = $props();
   const weeksCsv = $derived(data.weeks.map((w) => w.date).join(','));
+
+  let dialog = $state<HTMLDialogElement>();
 
   // per-week job dropdowns (0 by default; "+ request role" adds one)
   let jobSlots = $state<Record<string, number>>({});
@@ -47,51 +50,61 @@
 {#if !data.votable}
   <div class="box">This poll is closed (historical view). <a href="/">Go to the current poll →</a></div>
 {:else}
-  {#if form?.ok}
-    <div class="box ok">Thanks{form.name ? `, ${form.name}` : ''}! Saved — you're down for {form.availCount} Saturday(s). Submit again any time to change your answers.</div>
-  {:else if form?.error}
-    <div class="box warn">{form.error}</div>
-  {/if}
+  <p><button onclick={() => dialog?.showModal()}>Volunteer for {data.monthLabel} →</button></p>
 
-  <h2>Volunteer</h2>
-  <form method="POST">
-    <input type="hidden" name="weeks" value={weeksCsv} />
-    <input type="hidden" name="month" value={data.month} />
+  <dialog bind:this={dialog}>
+    <article>
+      <header class="dlg-head">
+        <strong>Volunteer — {data.monthLabel}</strong>
+        <button class="secondary close-x" aria-label="Close" onclick={() => dialog?.close()}>✕</button>
+      </header>
 
-    <p><strong>Your parkrun barcode</strong></p>
-    <p><input name="barcode" placeholder="A1234567" value={form?.barcode ?? ''} onblur={checkBarcode} required /></p>
-    {#if lookup?.known}
-      <p class="small ok-text">✓ Welcome back, {lookup.name}</p>
-    {/if}
-    {#if showName}
-      <p class="small muted">We don't have you yet — add your name once and we'll remember you:</p>
-      <p class="small">
-        First name <input name="first" value={form?.first ?? ''} />
-        Surname <input name="last" value={form?.last ?? ''} />
-      </p>
-    {/if}
+      {#if form?.ok}
+        <div class="box ok">Thanks{form.name ? `, ${form.name}` : ''}! Saved — you're down for {form.availCount} Saturday(s). Submit again any time to change your answers.</div>
+      {:else if form?.error}
+        <div class="box warn">{form.error}</div>
+      {/if}
 
-    <p class="small muted">Tick the Saturdays you can help; request a role only if you want one.</p>
-    {#each data.weeks as w (w.date)}
-      <div class="week">
-        <label class="wk"><input type="checkbox" name={`avail_${w.date}`} /> <strong>{w.label}</strong></label>
-        <div class="jobs">
-          {#each Array(slotsFor(w.date)) as _, i (i)}
-            <select name={`job_${w.date}`}>
-              <option value="">— choose a role —</option>
-              {#each data.roles as r (r.tid)}
-                <option value={r.tid}>{r.name}</option>
+      <form method="POST" use:enhance>
+        <input type="hidden" name="weeks" value={weeksCsv} />
+        <input type="hidden" name="month" value={data.month} />
+
+        <p><strong>Your parkrun barcode</strong></p>
+        <p><input name="barcode" placeholder="A1234567" value={form?.barcode ?? ''} onblur={checkBarcode} required /></p>
+        {#if lookup?.known}
+          <p class="small ok-text">✓ Welcome back, {lookup.name}</p>
+        {/if}
+        {#if showName}
+          <p class="small muted">We don't have you yet — add your name once and we'll remember you:</p>
+          <p class="small">
+            First name <input name="first" value={form?.first ?? ''} />
+            Surname <input name="last" value={form?.last ?? ''} />
+          </p>
+        {/if}
+
+        <p class="small muted">Tick the Saturdays you can help; request a role only if you want one.</p>
+        {#each data.weeks as w (w.date)}
+          <div class="week">
+            <label class="wk"><input type="checkbox" name={`avail_${w.date}`} /> <strong>{w.label}</strong></label>
+            <div class="jobs">
+              {#each Array(slotsFor(w.date)) as _, i (i)}
+                <select name={`job_${w.date}`}>
+                  <option value="">— choose a role —</option>
+                  {#each data.roles as r (r.tid)}
+                    <option value={r.tid}>{r.name}</option>
+                  {/each}
+                </select>
               {/each}
-            </select>
-          {/each}
-          <button type="button" class="secondary addjob" onclick={() => addJob(w.date)}>+ request role</button>
-        </div>
-      </div>
-    {/each}
+              <button type="button" class="secondary addjob" onclick={() => addJob(w.date)}>+ request role</button>
+            </div>
+          </div>
+        {/each}
 
-    <p class="small">
-      <label><input type="checkbox" name="consent" /> I agree that my name and parkrun barcode may be stored to build the roster. They're kept privately and I can ask to be removed.</label>
-    </p>
-    <p><button type="submit">Submit</button></p>
-  </form>
+        <p class="small">
+          <label><input type="checkbox" name="consent" /> I agree that my name and parkrun barcode may be stored to build the roster. They're kept privately and I can ask to be removed.</label>
+        </p>
+        <p><button type="submit">Submit</button></p>
+      </form>
+    </article>
+  </dialog>
 {/if}
