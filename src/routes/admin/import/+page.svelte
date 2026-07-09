@@ -18,7 +18,7 @@
   <div class="box ok">
     Imported {form.fileCount} file(s): {form.volunteers} volunteers, {form.weeks} week(s),
     {form.entries} roster entries added/updated.
-    <div class="small"><a href="/">Back to status</a> · <a href="/generate">Generate a roster</a></div>
+    <div class="small"><a href="/admin">Back</a> · <a href="/admin/generate">Generate a roster</a></div>
   </div>
 {:else if form?.error}
   <div class="box warn">Couldn’t import: {form.error}</div>

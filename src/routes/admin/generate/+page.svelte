@@ -6,7 +6,7 @@
 <h1>Generate a roster</h1>
 
 {#if data.volunteers.length === 0}
-  <div class="box warn">No volunteers yet — <a href="/import">import a saved EMS page</a> first.</div>
+  <div class="box warn">No volunteers yet — <a href="/admin/import">import a saved EMS page</a> first.</div>
 {:else}
   <form method="GET" style="margin-bottom:1rem">
     <label>Week:
