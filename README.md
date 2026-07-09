@@ -46,6 +46,23 @@ docker compose up -d --build
 Point the reverse proxy at the published port. **`ORIGIN` must match the public URL** or form POSTs
 are rejected (SvelteKit CSRF). Back up the DB volume — it's the only stateful thing.
 
+## Resetting the database
+
+The DB runs in SQLite **WAL mode**, so it's three files: `roster.db` (the data), `roster.db-wal`
+(recent writes) and `roster.db-shm` (a fixed ~32 KB shared-memory index — normal WAL overhead, not
+wasted space).
+
+To wipe all data: **stop the app first** (it holds the DB open — deleting while it's running can
+corrupt it), delete all three together, then start again — an empty DB is recreated automatically.
+
+```bash
+docker compose stop
+rm "$ROSTER_DB_DIR"/roster.db*     # all three; a leftover -wal would replay old writes
+docker compose up -d
+```
+
+Locally (dev): stop the server, `rm data/roster.db*`, then `npm run dev`.
+
 ## Stack
 
 SvelteKit + Node's built-in SQLite (no native build). See [`DESIGN.md`](DESIGN.md) for the design.
