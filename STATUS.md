@@ -43,6 +43,11 @@ Fills the **9 mandatory on-the-day roles** (Run Director, Course Check, First Ti
 Timekeepers, Barcode Scanning, Finish Tokens, Marshal, Tail Walker). Results Processor + Volunteer
 Co-ordinator are excluded (assigned outside the poll).
 
+Which roles the **poll offers** volunteers to request is per-parkrun config (`POLL_ROLES` env; the
+full role list lives in `src/lib/core/rules.ts`). Clonbur drops **First Timers Welcome** and
+**Finish Tokens** from the poll because they're always paired/absorbed — the generator still fills
+them, volunteers just can't request them directly. Other parkruns can offer a different set.
+
 Each volunteer picks a **role mode** in the poll: **any** (put me anywhere), **prefer** (I'd like
 these but I'm flexible), or **only** (I'll do these and nothing else).
 

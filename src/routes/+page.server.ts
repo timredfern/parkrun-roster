@@ -1,6 +1,7 @@
 import { fail } from '@sveltejs/kit';
+import { env } from '$env/dynamic/private';
 import { loadRegistry, stats, pollCounts, savePoll, volunteerExists, volunteerName } from '$lib/server/db';
-import { roleName, STANDARD_TEMPLATE } from '$lib/core/rules';
+import { roleName, STANDARD_TEMPLATE, ROLES } from '$lib/core/rules';
 import type { Actions, PageServerLoad } from './$types';
 
 function nextCalendarMonth(): { year: number; month0: number } {
@@ -33,11 +34,17 @@ function saturdaysInMonth(year: number, month0: number): { date: string; label: 
   return out;
 }
 
-function uniqueRoles(): { tid: number; name: string }[] {
+// Roles OFFERED IN THE POLL (requestable) for this parkrun. Set POLL_ROLES in the env to a
+// comma-separated list of task ids; if unset, offer every role in the standard template. The
+// generator still fills roles not offered here (e.g. Clonbur drops First Timers Welcome + Finish
+// Tokens because they're always paired/absorbed) — this only controls what volunteers can request.
+function pollRoles(): { tid: number; name: string }[] {
+  const raw = (env.POLL_ROLES ?? '').trim();
+  const tids = raw ? raw.split(',').map((s) => Number(s.trim())) : [...STANDARD_TEMPLATE];
   const seen = new Set<number>();
   const out: { tid: number; name: string }[] = [];
-  for (const t of STANDARD_TEMPLATE) {
-    if (seen.has(t)) continue;
+  for (const t of tids) {
+    if (!ROLES[t] || seen.has(t)) continue;
     seen.add(t);
     out.push({ tid: t, name: roleName(t) });
   }
@@ -65,7 +72,7 @@ export const load: PageServerLoad = ({ url }) => {
     month: monthStr(target.year, target.month0),
     votable,
     weeks,
-    roles: uniqueRoles(),
+    roles: pollRoles(),
   };
 };
 

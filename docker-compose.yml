@@ -12,6 +12,8 @@ services:
       - ROSTER_DB=/data/roster.db
       # Event name shown in the header (display only).
       - EVENT_NAME=${EVENT_NAME:-parkrun}
+      # Roles offered in the poll (comma-separated task ids); empty = all standard roles.
+      - POLL_ROLES=${POLL_ROLES:-}
       # allow the EMS "Save Page As" upload (adapter-node default body limit is ~512kb)
       - BODY_SIZE_LIMIT=5M
     volumes:
