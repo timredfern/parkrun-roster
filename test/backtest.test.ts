@@ -138,6 +138,20 @@ console.log('synthetic fixture — rules & invariants (always runs):');
     test('role goes to the person not-recently-doing it', () =>
       assert.equal(r.assignments.find((a) => a.tid === 7)?.athleteId, 1000003));
   }
+
+  // "Only" mode + first-come-first-served: two people who will ONLY do Marshal; earliest wins.
+  {
+    const available = [
+      { athleteId: 1000004, only: [7], prefer: [7], since: 200 },
+      { athleteId: 1000005, only: [7], prefer: [7], since: 100 },
+    ];
+    const r = generateRoster({ registry: reg, available, targetDate: date, template: [7], seed: 12345 });
+    console.log(' only + FCFS:');
+    test('strict role goes to the earliest sign-up', () =>
+      assert.equal(r.assignments.find((a) => a.tid === 7)?.athleteId, 1000005));
+    test('the later strict requester is not placed elsewhere', () =>
+      assert.ok(!r.assignments.some((a) => a.athleteId === 1000004)));
+  }
 }
 
 // ============ Tier 2: real data from data/ (skipped if absent) ============

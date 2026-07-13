@@ -69,6 +69,11 @@ main { max-width: 820px; margin: 0 auto; padding: 0 1rem 4rem; }
 .draftrow .draftrole { font-weight: 600; }
 .draftrow select { margin: 0.3rem 0 0; max-width: 24rem; }
 
+/* Poll: single-choice groups (Saturday, role mode) + the role checkbox grid. */
+.choices label { display: block; margin: 0.3rem 0; }
+.rolegrid { display: flex; flex-wrap: wrap; gap: 0.35rem 1rem; margin: 0.3rem 0 0.6rem 1.4rem; }
+.rolegrid label { font-size: 0.9rem; }
+
 /* Tables scroll rather than overflow the page on narrow screens. */
 .ok-text { color: #2e7d4f; font-weight: 600; }
 

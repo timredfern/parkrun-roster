@@ -19,8 +19,10 @@ import {
 
 export interface Availability {
   athleteId: number;
-  prefer?: number[]; // task ids the volunteer requested
+  prefer?: number[]; // task ids the volunteer would like (soft)
+  only?: number[]; // eligible ONLY for these roles (hard); if none free, left off
   avoid?: number[]; // task ids they will not do (hard exclusion)
+  since?: number; // arrival time (epoch ms) — first-come-first-served for 'only' requests
 }
 
 export interface Assignment {
@@ -45,6 +47,8 @@ const W_EXTRA_LOAD = -120; // per role already held (keeps people single until w
 const W_ROTATION_PER_WEEK = 2; // reward weeks since the person last did this role
 const W_NEVER_DID = 15; // bonus for a role the person has never done
 const ROTATION_CAP_WEEKS = 26;
+const W_ONLY = 300; // a strict "only this role" request outranks a flexible one (frees the flexible person)
+const W_FCFS_STEP = 200; // among strict requesters for a role, earlier sign-up wins (dominates rotation)
 
 function mulberry32(seed: number): () => number {
   let a = seed >>> 0;
@@ -151,6 +155,23 @@ export function generateRoster(opts: {
   const availById = new Map<number, Availability>();
   for (const a of opts.available) availById.set(a.athleteId, a);
 
+  // First-come-first-served order for strict "only" requests: per role, rank by sign-up time.
+  const onlyRank = new Map<string, number>(); // `${tid}:${athleteId}` -> 0 = earliest
+  {
+    const byRole = new Map<number, { id: number; since: number }[]>();
+    for (const a of opts.available) {
+      for (const tid of a.only ?? []) {
+        const arr = byRole.get(tid) ?? [];
+        arr.push({ id: a.athleteId, since: a.since ?? 0 });
+        byRole.set(tid, arr);
+      }
+    }
+    for (const [tid, arr] of byRole) {
+      arr.sort((x, y) => x.since - y.since);
+      arr.forEach((e, i) => onlyRank.set(`${tid}:${e.id}`, i));
+    }
+  }
+
   const pool: Volunteer[] = opts.available.map(
     (a) => opts.registry.volunteers.get(a.athleteId) ?? { athleteId: a.athleteId, first: '?', last: `A${a.athleteId}`, vc: 0, rdEligible: false },
   );
@@ -183,6 +204,7 @@ export function generateRoster(opts: {
         const av = availById.get(v.athleteId);
         if (tid === RD_TID && !v.rdEligible) continue; // hard: RD must be eligible
         if (av?.avoid?.includes(tid)) continue; // hard: won't do this role
+        if (av?.only && !av.only.includes(tid)) continue; // hard: "only" — not eligible for other roles
         if (usedSameTid.has(`${v.athleteId}:${tid}`)) continue; // no duplicate on same role
         if (thisDuringRun) {
           const held = (assignedByPerson.get(v.athleteId) ?? []).filter((t) => !CONCURRENCY_EXEMPT.has(t));
@@ -190,7 +212,11 @@ export function generateRoster(opts: {
           if (!held.every((other) => isSanctionedDouble(other, tid))) continue; // sanctioned pairs only
         }
         const b = scoreCandidate(tid, av, assignedByPerson.get(v.athleteId) ?? [], stats.get(v.athleteId), opts.targetDate);
-        const s = b.score + rng() * 4; // small jitter breaks ties among equally-due people
+        // Strict "only" requests: outrank flexible ones and resolve ties by first-come-first-served.
+        // Flexible/any candidates get a small random tie-break instead.
+        const s = av?.only?.includes(tid)
+          ? b.score + W_ONLY - (onlyRank.get(`${tid}:${v.athleteId}`) ?? 0) * W_FCFS_STEP
+          : b.score + rng() * 4;
         if (!bestCand || s > bestCand.s) bestCand = { v, b, s };
       }
 

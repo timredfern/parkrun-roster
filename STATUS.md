@@ -43,9 +43,15 @@ Fills the **9 mandatory on-the-day roles** (Run Director, Course Check, First Ti
 Timekeepers, Barcode Scanning, Finish Tokens, Marshal, Tail Walker). Results Processor + Volunteer
 Co-ordinator are excluded (assigned outside the poll).
 
+Each volunteer picks a **role mode** in the poll: **any** (put me anywhere), **prefer** (I'd like
+these but I'm flexible), or **only** (I'll do these and nothing else).
+
 Policy: **requests first, then rotate.**
-- An explicit request is honoured whenever feasible (at most one per person: "Marshal *or* Tail
+- A **prefer** request is honoured whenever feasible (at most one per person: "Marshal *or* Tail
   Walker" = one of them).
+- An **only** request outranks a flexible one for that role (so the flexible person moves aside); if
+  several people want *only* the same role, it goes **first-come-first-served** (earliest sign-up),
+  and a later "only" requester who misses out is left off (they said only that role).
 - Remaining slots go to whoever is most **due** — hasn't done that role recently, per `history`
   (weeks before the target date) — with a tiny random tie-break.
 
@@ -63,8 +69,9 @@ next week's rotation and RD-eligibility.
 
 ## Workflows
 
-**Volunteer (monthly):** open `/` → **Volunteer** → barcode (add name once if new) → tick
-Saturdays → optionally request a role → consent → submit.
+**Volunteer (monthly):** open `/` → **Volunteer** → barcode (add name once if new) → pick **one
+Saturday** (each shows how many have signed up so far) → choose **any / prefer / only** roles →
+consent → submit. (One Saturday per volunteer; re-submitting replaces the previous choice.)
 
 **Coordinator:** once, `/admin/import` a Save-Page-As of the EMS Volunteer Rosters page to seed the
 registry + history. Each week: `/admin/generate` → pick the Saturday → review the draft + warnings,

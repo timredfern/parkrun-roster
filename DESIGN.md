@@ -184,11 +184,15 @@ random restarts, keeping the best-scoring valid roster. Debuggable and instant.
   during-run roles ONLY as a sanctioned pair** (§2.5) — any other double is impossible, so the
   role is left unfilled rather than double-booked; ≤ 2 during-run roles per person; Run Director
   only from `rd_eligible ∪ override`. Headcount floors at **7 people** via sanctioned doubling.
-- **Assignment policy:** *requests first, then rotate* — an explicit request is honoured whenever
-  feasible (at most one per person: "Marshal or Tail Walker" = one of them), and the rest go to
-  whoever is most **due** for the role (hasn't done it recently, per saved history before the target
-  date), with a small random tie-break. `avoid` is a hard exclusion. Confirmed rosters are written
-  back to history, so each week feeds the next week's rotation.
+- **Role modes (from the poll):** each volunteer picks **any** / **prefer** / **only**. `any` = no
+  preference; `prefer` = soft request; `only` = hard — eligible for those roles alone, else left off.
+- **Assignment policy:** *requests first, then rotate* — a request is honoured whenever feasible (at
+  most one per person: "Marshal or Tail Walker" = one of them). An **only** request outranks a
+  flexible one for that role, and among multiple *only* requesters for the same role it's
+  **first-come-first-served** (earliest poll sign-up wins; `availability.created_at`). The remaining
+  slots go to whoever is most **due** (hasn't done it recently, per saved history before the target
+  date), with a small random tie-break. `avoid`/`only` are hard exclusions. Confirmed rosters are
+  written back to history, so each week feeds the next week's rotation.
 - **Warnings:** roles that can't be filled → "you need more volunteers"; fewer than 7 distinct
   people. (Non-sanctioned doubles can't occur, so there's no warning for them — they simply never
   happen.)

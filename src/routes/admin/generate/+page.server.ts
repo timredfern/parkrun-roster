@@ -36,18 +36,18 @@ export const load: PageServerLoad = ({ url }) => {
   const weeks = nextSaturdays(6).map((d) => ({ date: d, label: satLabel(d), count: counts.get(d) ?? 0 }));
   const date = url.searchParams.get('date') || weeks[0]!.date;
   const poll = getPollForDate(date);
-  const availSet = new Set(poll.map((p) => p.athleteId));
-  const reqMap = new Map(poll.map((p) => [p.athleteId, p.prefer]));
+  const pollById = new Map(poll.map((p) => [p.athleteId, p]));
   const volunteers = [...reg.volunteers.values()]
     .sort((a, b) => fullName(a).localeCompare(fullName(b)))
-    .map((v) => ({
-      athleteId: v.athleteId,
-      name: fullName(v),
-      vc: v.vc,
-      rdEligible: v.rdEligible,
-      available: availSet.has(v.athleteId),
-      requests: (reqMap.get(v.athleteId) ?? []).map(roleName),
-    }));
+    .map((v) => {
+      const p = pollById.get(v.athleteId);
+      let requests = '';
+      if (p) {
+        if (p.mode === 'any') requests = 'any role';
+        else requests = (p.mode === 'only' ? 'only: ' : '') + p.prefer.map(roleName).join(', ');
+      }
+      return { athleteId: v.athleteId, name: fullName(v), vc: v.vc, rdEligible: v.rdEligible, available: !!p, requests };
+    });
   return { volunteers, weeks, date, pollCount: poll.length };
 };
 
@@ -57,11 +57,17 @@ export const actions: Actions = {
     const date = String(form.get('date') || nextSaturday());
     const ids = form.getAll('available').map(Number);
 
-    // Requests come from the poll (a person may nominate several roles); the coordinator's
+    // Role prefs/mode come from the poll (any / prefer / only + arrival time); the coordinator's
     // checkboxes only decide who's in.
     const poll = getPollForDate(date);
-    const prefById = new Map(poll.map((p) => [p.athleteId, p.prefer]));
-    const available = ids.map((id) => ({ athleteId: id, prefer: prefById.get(id) }));
+    const pollById = new Map(poll.map((p) => [p.athleteId, p]));
+    const available = ids.map((id) => {
+      const p = pollById.get(id);
+      if (!p) return { athleteId: id };
+      if (p.mode === 'only') return { athleteId: id, only: p.prefer, prefer: p.prefer, since: p.since };
+      if (p.mode === 'prefer') return { athleteId: id, prefer: p.prefer, since: p.since };
+      return { athleteId: id, since: p.since };
+    });
 
     const reg = loadRegistry();
     const result = generateRoster({ registry: reg, available, targetDate: date });

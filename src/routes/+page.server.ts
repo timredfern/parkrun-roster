@@ -98,14 +98,19 @@ export const actions: Actions = {
       });
     }
 
-    const weeks = String(form.get('weeks') ?? '').split(',').filter(Boolean);
-    const entries = weeks.map((date) => ({
-      date,
-      available: !!form.get(`avail_${date}`),
-      prefer: form.getAll(`role_${date}`).filter((v) => v !== '').map(Number),
-    }));
-    savePoll({ athleteId, first: first || '?', last: last || '?', entries });
+    const date = String(form.get('date') ?? '');
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return fail(400, { error: 'Please choose a Saturday.', ...echo });
 
-    return { ok: true, availCount: entries.filter((e) => e.available).length, name: volunteerName(athleteId), ...echo };
+    const mode = (['any', 'prefer', 'only'].includes(String(form.get('mode'))) ? String(form.get('mode')) : 'any') as
+      | 'any'
+      | 'prefer'
+      | 'only';
+    const roles = mode === 'any' ? [] : form.getAll('role').map(Number).filter((n) => n > 0);
+    if (mode !== 'any' && roles.length === 0) {
+      return fail(400, { error: 'Pick at least one role, or choose "Any role".', ...echo });
+    }
+
+    savePoll({ athleteId, first: first || '?', last: last || '?', date, mode, roles });
+    return { ok: true, name: volunteerName(athleteId), date, ...echo };
   },
 };

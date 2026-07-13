@@ -37,15 +37,24 @@ function db(): DatabaseSync {
     CREATE TABLE IF NOT EXISTS availability (
       date        TEXT NOT NULL,  -- the Saturday
       athlete_id  INTEGER NOT NULL,
+      mode        TEXT NOT NULL DEFAULT 'any',  -- 'any' | 'prefer' | 'only'
+      created_at  INTEGER NOT NULL DEFAULT 0,   -- arrival time (epoch ms) for first-come-first-served
       PRIMARY KEY (date, athlete_id)
     );
     CREATE TABLE IF NOT EXISTS poll_requests (
       date        TEXT NOT NULL,
       athlete_id  INTEGER NOT NULL,
-      tid         INTEGER NOT NULL,  -- a requested role for that week
+      tid         INTEGER NOT NULL,  -- a selected role (with mode 'prefer' or 'only')
       PRIMARY KEY (date, athlete_id, tid)
     );
   `);
+  // Migrate older DBs: add availability.mode / created_at if missing.
+  const cols = new Set((d.prepare('PRAGMA table_info(availability)').all() as { name: string }[]).map((c) => c.name));
+  if (!cols.has('mode')) d.exec("ALTER TABLE availability ADD COLUMN mode TEXT NOT NULL DEFAULT 'any'");
+  if (!cols.has('created_at')) d.exec('ALTER TABLE availability ADD COLUMN created_at INTEGER NOT NULL DEFAULT 0');
+  // Under the old model, any row with role requests was effectively a soft "prefer".
+  d.exec(`UPDATE availability SET mode = 'prefer' WHERE mode = 'any' AND EXISTS
+    (SELECT 1 FROM poll_requests r WHERE r.date = availability.date AND r.athlete_id = availability.athlete_id)`);
   _db = d;
   return d;
 }
@@ -167,36 +176,43 @@ export function volunteerName(athleteId: number): string | null {
   return r ? `${r.first} ${r.last}`.trim() : null;
 }
 
-// A volunteer submitting the poll. `entries` is one row per upcoming Saturday.
+// A volunteer submitting the poll — one Saturday, with a role mode.
 export interface PollSubmission {
   athleteId: number;
   first: string;
   last: string;
-  entries: { date: string; available: boolean; prefer: number[] }[];
+  date: string;
+  mode: 'any' | 'prefer' | 'only';
+  roles: number[]; // selected roles (ignored when mode = 'any')
 }
 
+// A volunteer signs up for exactly ONE Saturday; re-submitting replaces any prior signup.
 export function savePoll(sub: PollSubmission): void {
   const d = db();
-  // Add the person if they're new (don't clobber an existing EMS record's name/vc).
   d.prepare('INSERT INTO volunteers (athlete_id, first, last, vc) VALUES (?, ?, ?, 0) ON CONFLICT(athlete_id) DO NOTHING').run(
     sub.athleteId,
     sub.first,
     sub.last,
   );
-  const addAvail = d.prepare('INSERT INTO availability (date, athlete_id) VALUES (?, ?) ON CONFLICT DO NOTHING');
-  const delAvail = d.prepare('DELETE FROM availability WHERE date = ? AND athlete_id = ?');
-  const delReq = d.prepare('DELETE FROM poll_requests WHERE date = ? AND athlete_id = ?');
-  const addReq = d.prepare('INSERT INTO poll_requests (date, athlete_id, tid) VALUES (?, ?, ?) ON CONFLICT DO NOTHING');
   d.exec('BEGIN');
   try {
-    for (const e of sub.entries) {
-      delReq.run(e.date, sub.athleteId); // re-submitting replaces prior answer for that week
-      if (e.available) {
-        addAvail.run(e.date, sub.athleteId);
-        for (const tid of e.prefer) addReq.run(e.date, sub.athleteId, tid);
-      } else {
-        delAvail.run(e.date, sub.athleteId);
-      }
+    // Preserve their original arrival time if they're just editing the same Saturday.
+    const existing = d.prepare('SELECT created_at FROM availability WHERE athlete_id = ? AND date = ?').get(sub.athleteId, sub.date) as
+      | { created_at: number }
+      | undefined;
+    const createdAt = existing?.created_at || Date.now();
+
+    d.prepare('DELETE FROM availability WHERE athlete_id = ?').run(sub.athleteId);
+    d.prepare('DELETE FROM poll_requests WHERE athlete_id = ?').run(sub.athleteId);
+    d.prepare('INSERT INTO availability (date, athlete_id, mode, created_at) VALUES (?, ?, ?, ?)').run(
+      sub.date,
+      sub.athleteId,
+      sub.mode,
+      createdAt,
+    );
+    if (sub.mode !== 'any') {
+      const addReq = d.prepare('INSERT INTO poll_requests (date, athlete_id, tid) VALUES (?, ?, ?) ON CONFLICT DO NOTHING');
+      for (const tid of sub.roles) addReq.run(sub.date, sub.athleteId, tid);
     }
     d.exec('COMMIT');
   } catch (err) {
@@ -205,20 +221,22 @@ export function savePoll(sub: PollSubmission): void {
   }
 }
 
-// Who's available for a given Saturday, with their requested roles (from the poll).
-export function getPollForDate(date: string): { athleteId: number; prefer: number[] }[] {
+// Who's available for a given Saturday: mode, arrival time, and selected roles.
+export function getPollForDate(date: string): { athleteId: number; mode: string; since: number; prefer: number[] }[] {
   const d = db();
   const rows = d
     .prepare(
-      `SELECT a.athlete_id AS id, GROUP_CONCAT(r.tid) AS tids
+      `SELECT a.athlete_id AS id, a.mode AS mode, a.created_at AS since, GROUP_CONCAT(r.tid) AS tids
        FROM availability a
        LEFT JOIN poll_requests r ON r.date = a.date AND r.athlete_id = a.athlete_id
        WHERE a.date = ?
        GROUP BY a.athlete_id`,
     )
-    .all(date) as { id: number; tids: string | null }[];
+    .all(date) as { id: number; mode: string; since: number; tids: string | null }[];
   return rows.map((r) => ({
     athleteId: r.id,
+    mode: r.mode,
+    since: r.since,
     prefer: r.tids ? r.tids.split(',').map(Number) : [],
   }));
 }

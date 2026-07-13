@@ -37,7 +37,7 @@
               {#if v.rdEligible}<span class="badge rd">RD</span>{/if}
               <span class="muted small">· {v.vc}×</span>
             </td>
-            <td class="muted small">{v.requests.length ? v.requests.join(', ') : '—'}</td>
+            <td class="muted small">{v.requests || '—'}</td>
           </tr>
         {/each}
       </tbody>

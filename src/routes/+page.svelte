@@ -1,14 +1,9 @@
 <script lang="ts">
   import { enhance } from '$app/forms';
   let { data, form } = $props();
-  const weeksCsv = $derived(data.weeks.map((w) => w.date).join(','));
 
   let dialog = $state<HTMLDialogElement>();
-
-  // per-week role dropdowns (0 by default; "+ request role" adds one)
-  let roleSlots = $state<Record<string, number>>({});
-  const slotsFor = (d: string) => roleSlots[d] ?? 0;
-  const addRole = (d: string) => (roleSlots[d] = slotsFor(d) + 1);
+  let mode = $state<'any' | 'prefer' | 'only'>('any');
 
   // barcode lookup: only ask for a name when it's unknown
   let lookup = $state<{ known: boolean; name: string | null } | null>(null);
@@ -60,13 +55,12 @@
       </header>
 
       {#if form?.ok}
-        <div class="box ok">Thanks{form.name ? `, ${form.name}` : ''}! Saved — you're down for {form.availCount} Saturday(s). Submit again any time to change your answers.</div>
+        <div class="box ok">Thanks{form.name ? `, ${form.name}` : ''}! You're down for {form.date}. Submit again any time to change it.</div>
       {:else if form?.error}
         <div class="box warn">{form.error}</div>
       {/if}
 
       <form method="POST" use:enhance>
-        <input type="hidden" name="weeks" value={weeksCsv} />
         <input type="hidden" name="month" value={data.month} />
 
         <p><strong>Your parkrun barcode</strong></p>
@@ -82,23 +76,26 @@
           </p>
         {/if}
 
-        <p class="small muted">Tick the Saturdays you can help; request a role only if you want one.</p>
-        {#each data.weeks as w (w.date)}
-          <div class="week">
-            <label class="wk"><input type="checkbox" name={`avail_${w.date}`} /> <strong>{w.label}</strong></label>
-            <div class="roles">
-              {#each Array(slotsFor(w.date)) as _, i (i)}
-                <select name={`role_${w.date}`}>
-                  <option value="">— choose a role —</option>
-                  {#each data.roles as r (r.tid)}
-                    <option value={r.tid}>{r.name}</option>
-                  {/each}
-                </select>
-              {/each}
-              <button type="button" class="secondary addrole" onclick={() => addRole(w.date)}>+ request role</button>
-            </div>
+        <h3>Which Saturday?</h3>
+        <div class="choices">
+          {#each data.weeks as w (w.date)}
+            <label class="choice"><input type="radio" name="date" value={w.date} required /> {w.label} <span class="muted small">— {w.count} so far</span></label>
+          {/each}
+        </div>
+
+        <h3>Which role?</h3>
+        <div class="choices">
+          <label class="choice"><input type="radio" name="mode" value="any" bind:group={mode} /> Any role <span class="muted small">— put me where I'm needed</span></label>
+          <label class="choice"><input type="radio" name="mode" value="prefer" bind:group={mode} /> I'd prefer… <span class="muted small">(but I'll do others if needed)</span></label>
+          <label class="choice"><input type="radio" name="mode" value="only" bind:group={mode} /> I can only do… <span class="muted small">(please don't put me elsewhere)</span></label>
+        </div>
+        {#if mode !== 'any'}
+          <div class="rolegrid">
+            {#each data.roles as r (r.tid)}
+              <label><input type="checkbox" name="role" value={r.tid} /> {r.name}</label>
+            {/each}
           </div>
-        {/each}
+        {/if}
 
         <p class="small">
           <label><input type="checkbox" name="consent" /> I agree that my name and parkrun barcode may be stored to build the roster. They're kept privately and I can ask to be removed.</label>
