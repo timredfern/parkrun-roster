@@ -64,7 +64,7 @@
         <input type="hidden" name="month" value={data.month} />
 
         <p><strong>Your parkrun barcode</strong></p>
-        <p><input name="barcode" placeholder="A1234567" value={form?.barcode ?? ''} onblur={checkBarcode} required /></p>
+        <p><input name="barcode" placeholder="A1234567" value={form?.barcode ?? ''} onblur={checkBarcode} /></p>
         {#if lookup?.known}
           <p class="small ok-text">✓ Welcome back, {lookup.name}</p>
         {/if}
@@ -79,7 +79,7 @@
         <h3>Which Saturday?</h3>
         <div class="choices">
           {#each data.weeks as w (w.date)}
-            <label class="choice"><input type="radio" name="date" value={w.date} required /> {w.label} <span class="muted small">— {w.count} so far</span></label>
+            <label class="choice"><input type="radio" name="date" value={w.date} /> {w.label} <span class="muted small">— {w.count} so far</span></label>
           {/each}
         </div>
 
