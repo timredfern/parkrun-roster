@@ -27,8 +27,8 @@ Each month, volunteers fill in a short poll saying which Saturdays they can help
 **For volunteers (once a month):**
 
 1. Open the poll link.
-2. Pick your name from the list — or, if you’re new, enter your parkrun barcode once.
-3. Tick the Saturdays you can help, and (optionally) request a job you’d like.
+2. Enter your parkrun barcode (add your name once if you’re new — after that we recognise you).
+3. Pick the Saturday you can help (each shows how many have signed up so far), and choose whether you’ll do **any role**, **prefer** certain roles (but are flexible), or will do **only** specific roles.
 
 **For the coordinator (each week):**
 
@@ -59,7 +59,7 @@ No other combinations are possible — a person can’t be in two places during 
 
 * **Run Director** goes to someone who has done it before or manually chosen.
 
-* We **honour people’s job requests first**, then fill the remaining jobs so that jobs get spread around for variety.
+* We **honour people’s role requests first** (and if several ask for *only* the same role, it’s first-come-first-served), then fill the remaining roles by **rotation** — spreading roles around so people get variety week to week.
 
 
 ## Does it actually work? Two real examples
@@ -70,7 +70,7 @@ We tested it on two real weeks using the actual poll responses.
 
 We gave it that week’s poll and who was available, and compared its draft to the roster we actually ran on the day. It produced a valid roster, **honoured everyone’s job requests**, flagged no problems, and **5 of the 9 jobs matched exactly** what we really did — including **Eilís covering both Run Director and Finish Tokens**, just as happened on the day. Its draft:
 
-| Job | Suggested |
+| Role | Suggested |
 | :---- | :---- |
 | Run Director | Eilís |
 | Finish Tokens | Eilís *(doubling up — an allowed combination)* |
