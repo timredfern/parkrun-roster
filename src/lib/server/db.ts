@@ -169,6 +169,19 @@ export function volunteerExists(athleteId: number): boolean {
   return !!db().prepare('SELECT 1 FROM volunteers WHERE athlete_id = ?').get(athleteId);
 }
 
+// A volunteer's current poll signup (they have at most one — one Saturday each), or null.
+export function getMyPollEntry(athleteId: number): { date: string; mode: string; roles: number[] } | null {
+  const d = db();
+  const a = d.prepare('SELECT date, mode FROM availability WHERE athlete_id = ?').get(athleteId) as
+    | { date: string; mode: string }
+    | undefined;
+  if (!a) return null;
+  const roles = (
+    d.prepare('SELECT tid FROM poll_requests WHERE athlete_id = ? AND date = ?').all(athleteId, a.date) as { tid: number }[]
+  ).map((r) => r.tid);
+  return { date: a.date, mode: a.mode, roles };
+}
+
 export function volunteerName(athleteId: number): string | null {
   const r = db().prepare('SELECT first, last FROM volunteers WHERE athlete_id = ?').get(athleteId) as
     | { first: string; last: string }

@@ -4,9 +4,12 @@
 
   let dialog = $state<HTMLDialogElement>();
   let mode = $state<'any' | 'prefer' | 'only'>('any');
+  let selectedDate = $state('');
+  let selectedRoles = $state<number[]>([]);
 
-  // barcode lookup: only ask for a name when it's unknown
-  let lookup = $state<{ known: boolean; name: string | null } | null>(null);
+  // barcode lookup: ask for a name only when unknown; pre-fill an existing signup for this month.
+  type Lookup = { known: boolean; name: string | null; current: { date: string; mode: string; roles: number[] } | null };
+  let lookup = $state<Lookup | null>(null);
   async function checkBarcode(e: Event) {
     const digits = (e.currentTarget as HTMLInputElement).value.replace(/[^0-9]/g, '');
     if (!digits) {
@@ -15,11 +18,21 @@
     }
     try {
       lookup = await (await fetch(`/lookup?barcode=${digits}`)).json();
+      if (lookup?.current) {
+        selectedDate = lookup.current.date;
+        mode = (['any', 'prefer', 'only'].includes(lookup.current.mode) ? lookup.current.mode : 'any') as 'any' | 'prefer' | 'only';
+        selectedRoles = lookup.current.roles;
+      }
     } catch {
       lookup = null;
     }
   }
   const showName = $derived((!!lookup && !lookup.known) || (!!form && 'needName' in form && !!form.needName));
+  const currentLabel = $derived.by(() => {
+    const c = lookup?.current;
+    if (!c) return '';
+    return data.weeks.find((w) => w.date === c.date)?.label ?? c.date;
+  });
 </script>
 
 <h1>{data.monthLabel} — volunteer poll</h1>
@@ -76,10 +89,14 @@
           </p>
         {/if}
 
+        {#if lookup?.current}
+          <div class="box">You're already down for <strong>{currentLabel}</strong>. Change it below, or just close to keep it.</div>
+        {/if}
+
         <h3>Which Saturday?</h3>
         <div class="choices">
           {#each data.weeks as w (w.date)}
-            <label class="choice"><input type="radio" name="date" value={w.date} /> {w.label} <span class="muted small">— {w.count} so far</span></label>
+            <label class="choice"><input type="radio" name="date" value={w.date} bind:group={selectedDate} /> {w.label} <span class="muted small">— {w.count} so far</span></label>
           {/each}
         </div>
 
@@ -92,7 +109,7 @@
         {#if mode !== 'any'}
           <div class="rolegrid">
             {#each data.roles as r (r.tid)}
-              <label><input type="checkbox" name="role" value={r.tid} /> {r.name}</label>
+              <label><input type="checkbox" name="role" value={r.tid} bind:group={selectedRoles} /> {r.name}</label>
             {/each}
           </div>
         {/if}
