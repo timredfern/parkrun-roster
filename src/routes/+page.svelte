@@ -10,8 +10,8 @@
   // barcode lookup: ask for a name only when unknown; pre-fill an existing signup for this month.
   type Lookup = { known: boolean; name: string | null; current: { date: string; mode: string; roles: number[] } | null };
   let lookup = $state<Lookup | null>(null);
-  async function checkBarcode(e: Event) {
-    const digits = (e.currentTarget as HTMLInputElement).value.replace(/[^0-9]/g, '');
+  async function runLookup(raw: string) {
+    const digits = raw.replace(/[^0-9]/g, '');
     if (!digits) {
       lookup = null;
       return;
@@ -25,6 +25,18 @@
       }
     } catch {
       lookup = null;
+    }
+  }
+  const checkBarcode = (e: Event) => runLookup((e.currentTarget as HTMLInputElement).value);
+
+  // Don't let Enter in a text field submit the whole form prematurely (before a Saturday is picked
+  // → "Please choose a Saturday."). In the barcode box, Enter just runs the lookup.
+  function onFormKeydown(e: KeyboardEvent) {
+    if (e.key !== 'Enter') return;
+    const t = e.target;
+    if (t instanceof HTMLInputElement && t.type !== 'submit' && t.type !== 'button') {
+      e.preventDefault();
+      if (t.name === 'barcode') runLookup(t.value);
     }
   }
   const showName = $derived((!!lookup && !lookup.known) || (!!form && 'needName' in form && !!form.needName));
@@ -73,7 +85,8 @@
         <div class="box warn">{form.error}</div>
       {/if}
 
-      <form method="POST" use:enhance={() => async ({ update }) => update({ reset: false })}>
+      <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
+      <form method="POST" onkeydown={onFormKeydown} use:enhance={() => async ({ update }) => update({ reset: false })}>
         <input type="hidden" name="month" value={data.month} />
 
         <p><strong>Your parkrun barcode</strong></p>
