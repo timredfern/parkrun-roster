@@ -94,15 +94,20 @@ export const actions: Actions = {
     if (!digits) return fail(400, { error: 'Enter your parkrun barcode (e.g. A1234567).', ...echo });
     const athleteId = Number(digits);
 
-    if (!form.get('consent')) return fail(400, { error: 'Please tick the box to accept the privacy notice.', ...echo });
-
+    // Consent is only needed to STORE a new person's data. Known volunteers are already stored
+    // (they consented when they first registered), so we don't ask again.
     const known = volunteerExists(athleteId);
-    if (!known && (!first || !last)) {
-      return fail(400, {
-        error: `We don't recognise barcode A${athleteId} yet — add your first name and surname and we'll register you.`,
-        needName: true,
-        ...echo,
-      });
+    if (!known) {
+      if (!first || !last) {
+        return fail(400, {
+          error: `We don't recognise barcode A${athleteId} yet — add your first name and surname and we'll register you.`,
+          needName: true,
+          ...echo,
+        });
+      }
+      if (!form.get('consent')) {
+        return fail(400, { error: 'Please tick the box to accept the privacy notice.', needName: true, ...echo });
+      }
     }
 
     const date = String(form.get('date') ?? '');

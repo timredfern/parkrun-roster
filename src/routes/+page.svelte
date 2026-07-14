@@ -87,6 +87,9 @@
             First name <input name="first" value={form?.first ?? ''} />
             Surname <input name="last" value={form?.last ?? ''} />
           </p>
+          <p class="small">
+            <label><input type="checkbox" name="consent" /> I agree that my name and parkrun barcode may be stored to build the roster. They're kept privately and I can ask to be removed.</label>
+          </p>
         {/if}
 
         {#if lookup?.current}
@@ -114,9 +117,6 @@
           </div>
         {/if}
 
-        <p class="small">
-          <label><input type="checkbox" name="consent" /> I agree that my name and parkrun barcode may be stored to build the roster. They're kept privately and I can ask to be removed.</label>
-        </p>
         <p><button type="submit">Submit</button></p>
       </form>
     </article>

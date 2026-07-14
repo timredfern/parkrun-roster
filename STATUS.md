@@ -76,8 +76,9 @@ next week's rotation and RD-eligibility.
 
 **Volunteer (monthly):** open `/` → **Volunteer** → barcode (add name once if new) → pick **one
 Saturday** (each shows how many have signed up so far) → choose **any / prefer / only** roles →
-consent → submit. (One Saturday per volunteer; re-submitting replaces the previous choice — a
-returning volunteer sees their current signup **pre-filled** with a note, so they can change it.)
+submit. (New volunteers accept a one-time privacy notice when registering; known volunteers aren't
+re-asked. One Saturday per volunteer; re-submitting replaces the previous choice — a returning
+volunteer sees their current signup **pre-filled** with a note, so they can change it.)
 
 **Coordinator:** once, `/admin/import` a Save-Page-As of the EMS Volunteer Rosters page to seed the
 registry + history. Each week: `/admin/generate` → pick the Saturday → review the draft + warnings,
