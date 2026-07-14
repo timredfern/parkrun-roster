@@ -235,3 +235,11 @@ random restarts, keeping the best-scoring valid roster. Debuggable and instant.
 We store names + barcodes (personal data, UK/EU). Needs: a lawful basis (consent, cleanest for a
 volunteer group), a plain-English privacy notice accepted at registration, and data kept on our
 own box (SQLite on `/tank`). Volunteers use our auth, never their parkrun login.
+
+**Open decision — consent for EMS-imported volunteers.** Consent is currently asked only when a
+*new* barcode registers via the poll. People imported from EMS are already stored, so when they poll
+they're "known" and never asked to consent through the tool. Two ways to close this, TBD:
+1. add a per-person **`consented` flag** and ask (once) until it's set — covers new *and* imported; or
+2. **notify imported volunteers** that their details were added (e.g. a one-time notice / message)
+   rather than collecting a tick.
+Until decided, we rely on the club's basis for the imported roster data.

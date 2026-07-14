@@ -101,6 +101,10 @@ lives in the `selfhostingsetup` repo (`roster/`).
 
 - **Auth** — none; `/admin` is reachable by URL. Needed before real volunteer data goes on the
   public internet.
+- **Consent for EMS-imported volunteers** — consent is asked only when a *new* barcode registers;
+  people imported from EMS are "known" and never asked. Decide between a per-person `consented`
+  flag (ask until set) or a notice telling imported volunteers their details were added. (See
+  `DESIGN.md §9`.)
 
 (Note: tweaking a saved roster re-runs no validation — a hand-edited slot is saved as-is, since
 it's a draft the coordinator types into EMS anyway.)
