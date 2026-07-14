@@ -73,7 +73,7 @@
         <div class="box warn">{form.error}</div>
       {/if}
 
-      <form method="POST" use:enhance>
+      <form method="POST" use:enhance={() => async ({ update }) => update({ reset: false })}>
         <input type="hidden" name="month" value={data.month} />
 
         <p><strong>Your parkrun barcode</strong></p>
