@@ -32,7 +32,7 @@
   {/if}
 
   {#if data.selected}
-    <h2>{selectedLabel} — edit this roster</h2>
+    <h2>{selectedLabel}</h2>
     <p class="small muted">Adjust any slot after review. Warnings update live; saving overwrites this
       week's saved roster.</p>
     {#key data.selected}
