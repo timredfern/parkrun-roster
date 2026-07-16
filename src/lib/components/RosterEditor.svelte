@@ -69,7 +69,7 @@
 
   {#if issues.length}
     <div class="box warn">
-      <strong>Rule warnings</strong> — these don't block saving:
+      <strong>Rule warnings</strong>
       <ul>{#each issues as x}<li>{x.message}</li>{/each}</ul>
     </div>
   {:else}
