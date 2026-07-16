@@ -4,7 +4,7 @@
   // any slot. It warns, never blocks — overrides are the coordinator's call after review.
   import { untrack } from 'svelte';
   import { checkRoster } from '$lib/core/check';
-  import { roleName } from '$lib/core/rules';
+  import { roleName, RD_TID } from '$lib/core/rules';
 
   interface Vol {
     athleteId: number;
@@ -49,7 +49,8 @@
         <select bind:value={row.athleteId}>
           <option value={null}>— unfilled —</option>
           {#each volunteers as v (v.athleteId)}
-            <option value={v.athleteId}>{v.name}{v.rdEligible ? ' · RD' : ''}</option>
+            <!-- mark RD-eligible people only on the Run Director slot, where it matters -->
+            <option value={v.athleteId}>{v.name}{v.rdEligible && row.tid === RD_TID ? ' · RD' : ''}</option>
           {/each}
         </select>
       </div>
