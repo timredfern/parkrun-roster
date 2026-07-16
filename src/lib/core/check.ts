@@ -4,7 +4,32 @@
 // review. The predicates mirror the hard constraints the generator enforces while building a draft
 // (score.ts): RD eligibility, the 2-role cap, and sanctioned pairs only.
 
-import { CONCURRENCY_EXEMPT, isSanctionedDouble, MAX_ROLES_PER_PERSON, MIN_PEOPLE, RD_TID, roleName } from './rules.ts';
+import {
+  CONCURRENCY_EXEMPT,
+  isSanctionedDouble,
+  MAX_ROLES_PER_PERSON,
+  MIN_PEOPLE,
+  RD_TID,
+  roleName,
+  sanctionedPartners,
+} from './rules.ts';
+
+const orList = (xs: string[]): string =>
+  xs.length <= 1 ? (xs[0] ?? '') : `${xs.slice(0, -1).join(', ')} or ${xs[xs.length - 1]}`;
+
+// Explain an illegal double in terms of what each role CAN pair with, e.g.
+// "Ethel Eames: Run Director + Timekeeper isn't allowed — Run Director can only pair with Finish
+//  Tokens, and Timekeeper can only pair with First Timers Welcome."
+function doubleMessage(name: string, a: number, b: number): string {
+  if (a === b) return `${name} is assigned ${roleName(a)} twice.`;
+  const rule = (tid: number) => {
+    const partners = sanctionedPartners(tid).map(roleName);
+    return partners.length
+      ? `${roleName(tid)} can only pair with ${orList(partners)}`
+      : `${roleName(tid)} can't be paired with another role`;
+  };
+  return `${name}: ${roleName(a)} + ${roleName(b)} isn't allowed — ${rule(a)}, and ${rule(b)}.`;
+}
 
 export interface CheckPerson {
   rdEligible: boolean;
@@ -84,7 +109,7 @@ export function checkRoster(slots: RosterSlot[], people: Map<number, CheckPerson
         if (!isSanctionedDouble(dur[i]!, dur[j]!)) {
           issues.push({
             kind: 'illegal_double',
-            message: `${nameOf(id)} doubles ${roleName(dur[i]!)} + ${roleName(dur[j]!)}, which isn't a sanctioned pair.`,
+            message: doubleMessage(nameOf(id), dur[i]!, dur[j]!),
             athleteIds: [id],
             tids: [dur[i]!, dur[j]!],
           });

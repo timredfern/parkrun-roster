@@ -177,6 +177,16 @@ console.log('synthetic fixture — rules & invariants (always runs):');
       const s = clean.map((x) => (x.tid === 7 ? { tid: 7, athleteId: 1000005 } : x)); // TK 1000005 also marshals
       assert.ok(hasKind(s, 'illegal_double'));
     });
+    test('double message names the allowed pairing (RD → Finish Tokens)', () => {
+      const s = clean.map((x) => (x.tid === 2 && x.athleteId === 1000005 ? { tid: 2, athleteId: 1000001 } : x)); // RD also a TK
+      const msg = checkRoster(s, people).find((i) => i.kind === 'illegal_double')?.message ?? '';
+      assert.ok(/Run Director can only pair with Finish Tokens/.test(msg), msg);
+    });
+    test('double message: a role with no partner says so', () => {
+      const s = clean.map((x) => (x.tid === 7 ? { tid: 7, athleteId: 1000005 } : x)); // Marshal := the TK person
+      const msg = checkRoster(s, people).find((i) => i.kind === 'illegal_double')?.message ?? '';
+      assert.ok(/Marshal can't be paired with another role/.test(msg), msg);
+    });
     test('three during-run roles → over_cap', () => {
       const s = clean.map((x) => (x.tid === 7 || x.tid === 11 ? { tid: x.tid, athleteId: 1000005 } : x));
       assert.ok(hasKind(s, 'over_cap'));

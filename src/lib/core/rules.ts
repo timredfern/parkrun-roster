@@ -55,3 +55,14 @@ export function pairKey(a: number, b: number): string {
 export function isSanctionedDouble(a: number, b: number): boolean {
   return SANCTIONED_DOUBLES.has(pairKey(a, b));
 }
+
+// The roles a given role is allowed to be doubled with (empty = can't be doubled at all).
+export function sanctionedPartners(tid: number): number[] {
+  const out: number[] = [];
+  for (const key of SANCTIONED_DOUBLES) {
+    const [a, b] = key.split('-').map(Number);
+    if (a === tid) out.push(b!);
+    else if (b === tid) out.push(a!);
+  }
+  return out;
+}
