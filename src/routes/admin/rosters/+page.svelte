@@ -12,12 +12,17 @@
   <form method="GET" style="margin-bottom:1rem">
     <label>Week:
       <select name="date" onchange={(e) => e.currentTarget.form?.requestSubmit()}>
+        <option value="" disabled selected={!data.selected}>— choose a week —</option>
         {#each data.dates as d (d.date)}
           <option value={d.date} selected={d.date === data.selected}>{d.label}</option>
         {/each}
       </select>
     </label>
   </form>
+
+  {#if !data.selected}
+    <p class="small muted">Pick a week to view and edit its roster.</p>
+  {/if}
 
   {#if form?.saved}
     <div class="box ok">

@@ -9,7 +9,7 @@ const label = (iso: string) =>
 
 export const load: PageServerLoad = ({ url }) => {
   const dates = confirmedRosterDates().map((d) => ({ date: d, label: label(d) }));
-  const selected = url.searchParams.get('date') || dates[0]?.date || null;
+  const selected = url.searchParams.get('date') || null; // nothing opened until a week is chosen
 
   const reg = loadRegistry();
   const volunteers = [...reg.volunteers.values()]
