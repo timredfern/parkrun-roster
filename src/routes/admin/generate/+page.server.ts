@@ -98,6 +98,6 @@ export const actions: Actions = {
       if (raw) slots.push({ tid, athleteId: Number(raw) });
     }
     confirmRoster(date, slots);
-    return { confirmed: true, date, count: slots.length };
+    return { confirmed: true, date, count: new Set(slots.map((s) => s.athleteId)).size };
   },
 };

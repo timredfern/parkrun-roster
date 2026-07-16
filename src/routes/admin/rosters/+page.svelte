@@ -26,7 +26,7 @@
 
   {#if form?.saved}
     <div class="box ok">
-      Saved changes to the {form.date} roster ({form.count} people).{#if form.warnings?.length}
+      Saved changes to the {form.date} roster ({form.count} volunteers).{#if form.warnings?.length}
         Rule warnings remain (see below).{/if}
     </div>
   {/if}

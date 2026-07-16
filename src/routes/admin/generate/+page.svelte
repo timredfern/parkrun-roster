@@ -50,7 +50,7 @@
 {/if}
 
 {#if form?.confirmed}
-  <div class="box ok">Roster for {form.date} saved ({form.count} people). It’s now part of history.</div>
+  <div class="box ok">Roster for {form.date} saved ({form.count} volunteers). It’s now part of history.</div>
 {/if}
 
 {#if g}

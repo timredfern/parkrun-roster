@@ -53,6 +53,6 @@ export const actions: Actions = {
       [...reg.volunteers.values()].map((v) => [v.athleteId, { rdEligible: v.rdEligible, name: fullName(v) }]),
     );
     const warnings = checkRoster(slots, people).map((iss) => iss.message);
-    return { saved: true, date, count: slots.length, warnings };
+    return { saved: true, date, count: new Set(slots.map((s) => s.athleteId)).size, warnings };
   },
 };
