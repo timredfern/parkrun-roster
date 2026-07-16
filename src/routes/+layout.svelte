@@ -6,8 +6,12 @@
   const isAdmin = $derived(page.url.pathname.startsWith('/admin'));
 </script>
 
+<svelte:head>
+  <title>{data.eventName} parkrun roster</title>
+</svelte:head>
+
 <header class="site">
-  <div class="inner"><a href="/" class="brand"><strong>{data.eventName} · Roster</strong></a></div>
+  <div class="inner"><a href="/" class="brand"><strong>{data.eventName} parkrun roster</strong></a></div>
 </header>
 
 <main>
