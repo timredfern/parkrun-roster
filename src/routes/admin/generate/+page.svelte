@@ -1,4 +1,5 @@
 <script lang="ts">
+  import RosterEditor from '$lib/components/RosterEditor.svelte';
   let { data, form } = $props();
   const g = $derived(form?.generated);
 </script>
@@ -54,33 +55,14 @@
 
 {#if g}
   <h2>Draft for {g.date}</h2>
-  <p class="small muted">Adjust any assignment if you like, then confirm. (Warnings below reflect the auto-generated draft.)</p>
-  <form method="POST" action="?/confirm">
-    <input type="hidden" name="date" value={g.date} />
-    <div class="draft">
-      {#each g.rows as r, i (i)}
-        <div class="draftrow">
-          <input type="hidden" name={`tid_${i}`} value={r.tid} />
-          <div class="draftrole">{r.role}</div>
-          <select name={`slot_${i}`}>
-            <option value="">— unfilled —</option>
-            {#each data.volunteers as v (v.athleteId)}
-              <option value={v.athleteId} selected={v.athleteId === r.athleteId}>{v.name}</option>
-            {/each}
-          </select>
-          {#if r.rationale}<div class="muted small">{r.rationale}</div>{/if}
-        </div>
-      {/each}
-    </div>
-    <p class="small muted">{g.filled}/{g.total} roles filled · {g.distinct} distinct people (before edits)</p>
-
-    {#if g.warnings.length}
-      <div class="box warn"><strong>Warnings</strong><ul>{#each g.warnings as w}<li>{w}</li>{/each}</ul></div>
-    {:else}
-      <div class="box ok">No warnings.</div>
-    {/if}
-
-    <p><button type="submit">Confirm &amp; save this roster</button>
-    <span class="muted small">Saves it to history; then enter it into EMS.</span></p>
-  </form>
+  <p class="small muted">Adjust any assignment; the rule warnings update live. Then confirm — it's saved to
+    history, then you enter it into EMS.</p>
+  {#key g}
+    <RosterEditor
+      slots={g.rows.map((r) => ({ tid: r.tid, athleteId: r.athleteId }))}
+      volunteers={data.volunteers}
+      date={g.date}
+      action="?/confirm"
+      submitLabel="Confirm & save this roster" />
+  {/key}
 {/if}

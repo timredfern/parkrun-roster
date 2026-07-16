@@ -9,10 +9,12 @@ import { readFileSync, readdirSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 import assert from 'node:assert/strict';
 import { parseEmsHtml } from '../src/lib/core/parse.ts';
-import { buildRegistry } from '../src/lib/core/registry.ts';
+import { buildRegistry, fullName } from '../src/lib/core/registry.ts';
 import { generateRoster } from '../src/lib/core/score.ts';
 import type { Availability, RosterResult } from '../src/lib/core/score.ts';
 import { CONCURRENCY_EXEMPT, isSanctionedDouble, RD_TID } from '../src/lib/core/rules.ts';
+import { checkRoster } from '../src/lib/core/check.ts';
+import type { CheckPerson, RosterSlot } from '../src/lib/core/check.ts';
 
 const root = process.cwd();
 
@@ -151,6 +153,44 @@ console.log('synthetic fixture — rules & invariants (always runs):');
       assert.equal(r.assignments.find((a) => a.tid === 7)?.athleteId, 1000005));
     test('the later strict requester is not placed elsewhere', () =>
       assert.ok(!r.assignments.some((a) => a.athleteId === 1000004)));
+  }
+
+  // checkRoster — the live validator used by the editors (must agree with the generator's rules).
+  {
+    const people = new Map<number, CheckPerson>(
+      [...reg.volunteers.values()].map((v) => [v.athleteId, { rdEligible: v.rdEligible, name: fullName(v) }]),
+    );
+    const hasKind = (slots: RosterSlot[], k: string) => checkRoster(slots, people).some((i) => i.kind === k);
+    // A clean, legal roster: 9 distinct, RD eligible (1000001), no doubles.
+    const clean: RosterSlot[] = [
+      { tid: 1, athleteId: 1000001 }, { tid: 34, athleteId: 1000003 }, { tid: 15, athleteId: 1000004 },
+      { tid: 2, athleteId: 1000005 }, { tid: 2, athleteId: 1000006 }, { tid: 11, athleteId: 1000007 },
+      { tid: 13, athleteId: 1000008 }, { tid: 7, athleteId: 1000009 }, { tid: 19, athleteId: 1000010 },
+    ];
+    console.log(' checkRoster:');
+    test('clean roster → no issues', () => assert.deepEqual(checkRoster(clean, people), []));
+    test('sanctioned double (RD+Finish Tokens) → no illegal_double', () => {
+      const s = clean.map((x) => (x.tid === 13 ? { tid: 13, athleteId: 1000001 } : x)); // RD also does tokens
+      assert.ok(!hasKind(s, 'illegal_double'));
+    });
+    test('non-sanctioned double (Marshal+Timekeeper) → illegal_double', () => {
+      const s = clean.map((x) => (x.tid === 7 ? { tid: 7, athleteId: 1000005 } : x)); // TK 1000005 also marshals
+      assert.ok(hasKind(s, 'illegal_double'));
+    });
+    test('three during-run roles → over_cap', () => {
+      const s = clean.map((x) => (x.tid === 7 || x.tid === 11 ? { tid: x.tid, athleteId: 1000005 } : x));
+      assert.ok(hasKind(s, 'over_cap'));
+    });
+    test('ineligible Run Director → rd_ineligible', () => {
+      const s = clean.map((x) => (x.tid === 1 ? { tid: 1, athleteId: 1000003 } : x)); // 1000003 not RD-eligible
+      assert.ok(hasKind(s, 'rd_ineligible'));
+    });
+    test('an unfilled slot → unfilled', () => {
+      const s = clean.map((x) => (x.tid === 19 ? { tid: 19, athleteId: null } : x));
+      assert.ok(hasKind(s, 'unfilled'));
+    });
+    test('fewer than 7 distinct people → min_people', () =>
+      assert.ok(hasKind(clean.slice(0, 5), 'min_people')));
   }
 }
 

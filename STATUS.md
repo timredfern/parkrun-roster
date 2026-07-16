@@ -17,7 +17,8 @@ and generates a draft weekly roster for a coordinator to review and enter into p
 - **`/admin`** — coordinator hub (unauthenticated for now), linking:
   - **`/admin/generate`** — pick a Saturday (auto-loads that week's poll responses) → **Generate
     draft** → **tweak** any assignment (per-slot dropdown) → **Confirm & save**.
-  - **`/admin/rosters`** — browse previously saved (confirmed) rosters.
+  - **`/admin/rosters`** — browse **and edit** previously saved (confirmed) rosters (same slot
+    editor + live rule-checking as the draft; saving overwrites that week's record).
   - **`/admin/import`** — upload saved EMS pages to seed/reconcile.
 - A discreet **"Coordinator →"** link in the public footer.
 
@@ -106,5 +107,8 @@ lives in the `selfhostingsetup` repo (`roster/`).
   flag (ask until set) or a notice telling imported volunteers their details were added. (See
   `DESIGN.md §9`.)
 
-(Note: tweaking a saved roster re-runs no validation — a hand-edited slot is saved as-is, since
-it's a draft the coordinator types into EMS anyway.)
+(Note: both editors run the rostering rules **live** as you change a slot — unfilled roles, under 7
+distinct people, an ineligible Run Director, over-cap, and non-sanctioned doubles are flagged and
+the offending rows highlighted. Warnings **don't block saving**: an override is the coordinator's
+deliberate call after review. The shared checker (`src/lib/core/check.ts`) reuses the same
+predicates the generator enforces, so they can't disagree.)

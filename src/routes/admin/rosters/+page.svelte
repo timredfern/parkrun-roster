@@ -1,5 +1,7 @@
 <script lang="ts">
-  let { data } = $props();
+  import RosterEditor from '$lib/components/RosterEditor.svelte';
+  let { data, form } = $props();
+  const selectedLabel = $derived(data.dates.find((d) => d.date === data.selected)?.label ?? data.selected);
 </script>
 
 <h1>Saved rosters</h1>
@@ -17,14 +19,25 @@
     </label>
   </form>
 
-  <div class="tablewrap">
-    <table>
-      <thead><tr><th>Role</th><th>Person</th></tr></thead>
-      <tbody>
-        {#each data.roster as r (r.role + r.athleteId)}
-          <tr><td class="role">{r.role}</td><td>{r.name} <span class="muted small">A{r.athleteId}</span></td></tr>
-        {/each}
-      </tbody>
-    </table>
-  </div>
+  {#if form?.saved}
+    <div class="box ok">
+      Saved changes to the {form.date} roster ({form.count} people).{#if form.warnings?.length}
+        Rule warnings remain (see below).{/if}
+    </div>
+  {/if}
+
+  {#if data.selected}
+    <h2>{selectedLabel} — edit this roster</h2>
+    <p class="small muted">Adjust any slot after review. Warnings update live; saving overwrites this
+      week's saved roster.</p>
+    {#key data.selected}
+      <RosterEditor
+        slots={data.slots}
+        volunteers={data.volunteers}
+        date={data.selected}
+        extras={data.extras}
+        action={`?/save&date=${data.selected}`}
+        submitLabel="Save changes" />
+    {/key}
+  {/if}
 {/if}
