@@ -116,19 +116,22 @@
           {/each}
         </div>
 
-        <h3>Which role?</h3>
-        <div class="choices">
-          <label class="choice"><input type="radio" name="mode" value="any" bind:group={mode} /> Any role <span class="muted small">— put me where I'm needed</span></label>
-          <label class="choice"><input type="radio" name="mode" value="prefer" bind:group={mode} /> I'd prefer… <span class="muted small">(but I'll do others if needed)</span></label>
-          <label class="choice"><input type="radio" name="mode" value="only" bind:group={mode} /> I can only do… <span class="muted small">(please don't put me elsewhere)</span></label>
-        </div>
-        {#if mode !== 'any'}
+        {#snippet roleGrid()}
           <div class="rolegrid">
             {#each data.roles as r (r.tid)}
               <label><input type="checkbox" name="role" value={r.tid} bind:group={selectedRoles} /> {r.name}</label>
             {/each}
           </div>
-        {/if}
+        {/snippet}
+
+        <h3>Which role?</h3>
+        <div class="choices">
+          <label class="choice"><input type="radio" name="mode" value="any" bind:group={mode} /> Any role <span class="muted small">— put me where I'm needed</span></label>
+          <label class="choice"><input type="radio" name="mode" value="prefer" bind:group={mode} /> I'd prefer… <span class="muted small">(but I'll do others if needed)</span></label>
+          {#if mode === 'prefer'}{@render roleGrid()}{/if}
+          <label class="choice"><input type="radio" name="mode" value="only" bind:group={mode} /> I can only do… <span class="muted small">(please don't put me elsewhere)</span></label>
+          {#if mode === 'only'}{@render roleGrid()}{/if}
+        </div>
 
         <p><button type="submit">Submit</button></p>
       </form>

@@ -6,12 +6,13 @@
 
 <h1>Generate a roster</h1>
 
-{#if data.volunteers.length === 0}
+{#if !data.hasVolunteers}
   <div class="box warn">No volunteers yet — <a href="/admin/import">import a saved EMS page</a> first.</div>
 {:else}
   <form method="GET" style="margin-bottom:1rem">
     <label>Week:
       <select name="date" onchange={(e) => e.currentTarget.form?.requestSubmit()}>
+        <option value="" selected={!data.date}>— pick a week —</option>
         {#each data.weeks as w (w.date)}
           <option value={w.date} selected={w.date === data.date}>
             {w.label} — {w.count ? `${w.count} responded` : 'no responses yet'}
@@ -21,6 +22,9 @@
     </label>
   </form>
 
+  {#if !data.date}
+    <p class="muted">Pick a week above to see who's available and generate a draft.</p>
+  {:else}
   <form method="POST" action="?/generate">
     <input type="hidden" name="date" value={data.date} />
     <p class="muted small">Generating for <strong>{data.date}</strong> — ticked from the poll; adjust as needed.</p>
@@ -47,6 +51,7 @@
 
     <p><button type="submit">Generate draft</button></p>
   </form>
+  {/if}
 {/if}
 
 {#if form?.confirmed}

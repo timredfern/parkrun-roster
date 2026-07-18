@@ -34,7 +34,10 @@ export const load: PageServerLoad = ({ url }) => {
   const reg = loadRegistry();
   const counts = new Map(pollCounts().map((c) => [c.date, c.n]));
   const weeks = nextSaturdays(6).map((d) => ({ date: d, label: satLabel(d), count: counts.get(d) ?? 0 }));
-  const date = url.searchParams.get('date') || weeks[0]!.date;
+  const hasVolunteers = reg.volunteers.size > 0;
+  // No week chosen yet → don't build the list; the page shows only the week picker.
+  const date = url.searchParams.get('date');
+  if (!date) return { volunteers: [], weeks, date: null, pollCount: 0, hasVolunteers };
   const poll = getPollForDate(date);
   const pollById = new Map(poll.map((p) => [p.athleteId, p]));
   const volunteers = [...reg.volunteers.values()]
@@ -48,7 +51,7 @@ export const load: PageServerLoad = ({ url }) => {
       }
       return { athleteId: v.athleteId, name: fullName(v), vc: v.vc, rdEligible: v.rdEligible, available: !!p, requests };
     });
-  return { volunteers, weeks, date, pollCount: poll.length };
+  return { volunteers, weeks, date, pollCount: poll.length, hasVolunteers };
 };
 
 export const actions: Actions = {
