@@ -14,6 +14,8 @@ services:
       - EVENT_NAME=${EVENT_NAME:-parkrun}
       # Roles offered in the poll (comma-separated task ids); empty = all standard roles.
       - POLL_ROLES=${POLL_ROLES:-}
+      # Woodland dark palette: mossy | bark | pine (default mossy).
+      - THEME=${THEME:-mossy}
       # allow the EMS "Save Page As" upload (adapter-node default body limit is ~512kb)
       - BODY_SIZE_LIMIT=5M
     volumes:

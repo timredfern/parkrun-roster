@@ -1,16 +1,71 @@
-/* Thin layer on top of Pico (which handles typography, forms, tables, buttons). */
+/* Thin layer on top of Pico (which handles typography, forms, tables, buttons).
+
+   Dark "woodland" theming: Pico runs in its dark scheme (<html data-theme="dark">), and a
+   data-woodland attribute — injected per-request from the THEME env var in hooks.server.ts —
+   selects one of the three palettes below. Each palette only defines semantic tokens; the
+   mapping block then wires those tokens onto Pico's own variables (and this file's components). */
 
 :root {
-  --accent: #3e3e78;
   --pico-font-size: 95%; /* slightly compact so tables fit */
 }
 
-/* Full-width dark header bar (kept outside Pico's element styling). */
+/* ---- palettes (THEME=mossy | bark | pine) ---- */
+[data-woodland='mossy'] {
+  --bg: #13180f; --surface: #1d241a; --text: #e4e8db; --muted: #97a184; --border: #2f3a28;
+  --accent: #7fae54; --accent-hover: #92c065; --accent-ink: #10160b; --header: #26331c;
+  --warn-bg: #2e2410; --warn-bd: #6b5320; --warn-text: #f0d9a8;
+  --ok-bg: #17251a; --ok-bd: #2f5d3a; --ok-text: #8fc06a;
+  --badge-bg: #2f3b22; --badge-fg: #a9c98a;
+  --bad-bg: #2a1512; --bad-bd: #b3452e;
+}
+[data-woodland='bark'] {
+  --bg: #17130d; --surface: #221b13; --text: #ece4d8; --muted: #a89a86; --border: #3a2f22;
+  --accent: #c8894b; --accent-hover: #d89b5e; --accent-ink: #191007; --header: #2c2114;
+  --warn-bg: #2f2410; --warn-bd: #6f5522; --warn-text: #f2dbac;
+  --ok-bg: #1e2413; --ok-bd: #4f5f2c; --ok-text: #b7c56a;
+  --badge-bg: #3a2c18; --badge-fg: #d6ac7c;
+  --bad-bg: #2c1611; --bad-bd: #b3452e;
+}
+[data-woodland='pine'] {
+  --bg: #10150f; --surface: #1a211d; --text: #dfe6df; --muted: #8d9d94; --border: #283630;
+  --accent: #5a9576; --accent-hover: #6dab89; --accent-ink: #0b1410; --header: #1e2a24;
+  --warn-bg: #2b2513; --warn-bd: #665626; --warn-text: #ecdba6;
+  --ok-bg: #16241d; --ok-bd: #2f5d47; --ok-text: #74c29a;
+  --badge-bg: #23342b; --badge-fg: #93c3ab;
+  --bad-bg: #241713; --bad-bd: #a8503a;
+}
+
+/* ---- map woodland tokens onto Pico (app.css loads after pico, so these win) ---- */
+[data-theme='dark'] {
+  --pico-background-color: var(--bg);
+  --pico-color: var(--text);
+  --pico-card-background-color: var(--surface);
+  --pico-card-sectioning-background-color: var(--surface);
+  --pico-muted-color: var(--muted);
+  --pico-muted-border-color: var(--border);
+  --pico-table-border-color: var(--border);
+  --pico-form-element-background-color: var(--surface);
+  --pico-form-element-border-color: var(--border);
+  --pico-primary: var(--accent);
+  --pico-primary-background: var(--accent);
+  --pico-primary-hover-background: var(--accent-hover);
+  --pico-primary-border: var(--accent);
+  --pico-primary-hover-border: var(--accent-hover);
+  --pico-primary-inverse: var(--accent-ink);
+  --pico-primary-focus: color-mix(in srgb, var(--accent) 35%, transparent);
+  --pico-primary-underline: color-mix(in srgb, var(--accent) 45%, transparent);
+}
+
+.muted { color: var(--muted); }
+.small { font-size: 0.85rem; }
+
+/* Full-width header bar (deep-woodland tone, kept outside Pico's element styling). */
 header.site {
-  background: var(--accent);
+  background: var(--header);
   color: #fff;
   padding: 0.7rem 1rem;
   margin-bottom: 1.25rem;
+  border-bottom: 1px solid var(--border);
 }
 header.site .inner {
   max-width: 820px;
@@ -27,35 +82,34 @@ header.site nav a:hover { opacity: 1; text-decoration: underline; }
 
 main { max-width: 820px; margin: 0 auto; padding: 0 1rem 4rem; }
 
-.muted { color: var(--pico-muted-color); }
-.small { font-size: 0.85rem; }
-
 .cards { display: flex; gap: 1rem; flex-wrap: wrap; margin: 1rem 0; }
 .card {
-  border: 1px solid var(--pico-muted-border-color);
+  border: 1px solid var(--border);
   border-radius: var(--pico-border-radius);
+  background: var(--surface);
   padding: 1rem 1.25rem;
   flex: 1 1 150px;
 }
-.card .n { font-size: 2rem; font-weight: 700; line-height: 1.1; }
+.card .n { font-size: 2rem; font-weight: 700; line-height: 1.1; color: var(--accent); }
 
 .badge {
   display: inline-block; font-size: 0.7rem; font-weight: 700;
   padding: 0.05rem 0.45rem; border-radius: 999px;
-  background: #e6e6f5; color: var(--accent); vertical-align: middle;
+  background: var(--badge-bg); color: var(--badge-fg); vertical-align: middle;
 }
 
 .box {
-  border: 1px solid var(--pico-muted-border-color);
+  border: 1px solid var(--border);
   border-radius: var(--pico-border-radius);
+  background: var(--surface);
   padding: 0.75rem 1rem; margin: 1rem 0;
 }
-.box.warn { background: #fff5e6; border-color: #f0c36d; }
-.box.ok { background: #eafaf0; border-color: #8fd6a8; }
+.box.warn { background: var(--warn-bg); border-color: var(--warn-bd); color: var(--warn-text); }
+.box.ok { background: var(--ok-bg); border-color: var(--ok-bd); }
 .box ul { margin: 0.25rem 0 0; padding-left: 1.1rem; }
 
 .week {
-  border: 1px solid var(--pico-muted-border-color);
+  border: 1px solid var(--border);
   border-radius: var(--pico-border-radius);
   padding: 0.6rem 0.9rem; margin: 0.6rem 0;
 }
@@ -65,23 +119,22 @@ main { max-width: 820px; margin: 0 auto; padding: 0 1rem 4rem; }
 
 /* Editable draft — stacked blocks so the person dropdown gets full width (esp. on mobile). */
 .draft { margin: 0.5rem 0; }
-.draftrow { padding: 0.6rem 0; border-bottom: 1px solid var(--pico-muted-border-color); }
+.draftrow { padding: 0.6rem 0; border-bottom: 1px solid var(--border); }
 .draftrow .draftrole { font-weight: 600; }
 .draftrow select { margin: 0.3rem 0 0; max-width: 24rem; }
 /* a slot whose person breaks a rule, and an unfilled slot */
-.draftrow.bad { background: color-mix(in srgb, #b3261e 12%, transparent); border-left: 3px solid #b3261e; padding-left: 0.5rem; }
-.draftrow.bad select { border-color: #b3261e; }
-.draftrow.empty .draftrole { color: var(--pico-muted-color); }
+.draftrow.bad { background: var(--bad-bg); border-left: 3px solid var(--bad-bd); padding-left: 0.5rem; }
+.draftrow.bad select { border-color: var(--bad-bd); }
+.draftrow.empty .draftrole { color: var(--muted); }
 
 /* Poll: single-choice groups (Saturday, role mode) + the role checkbox grid. */
 .choices label { display: block; margin: 0.3rem 0; }
 .rolegrid { display: flex; flex-wrap: wrap; gap: 0.35rem 1rem; margin: 0.3rem 0 0.6rem 1.4rem; }
 .rolegrid label { font-size: 0.9rem; }
 
-/* Tables scroll rather than overflow the page on narrow screens. */
-.ok-text { color: #2e7d4f; font-weight: 600; }
+.ok-text { color: var(--ok-text); font-weight: 600; }
 
-.site-footer { max-width: 820px; margin: 2.5rem auto 0; padding: 1rem; border-top: 1px solid var(--pico-muted-border-color); text-align: right; }
+.site-footer { max-width: 820px; margin: 2.5rem auto 0; padding: 1rem; border-top: 1px solid var(--border); text-align: right; }
 .adminnav { max-width: 820px; margin: 0 auto 1.25rem; display: flex; gap: 1.25rem; padding: 0 1rem; }
 .adminnav a { text-decoration: none; font-weight: 600; }
 
