@@ -35,10 +35,12 @@ export const load: PageServerLoad = ({ url }) => {
   const counts = new Map(pollCounts().map((c) => [c.date, c.n]));
   const weeks = nextSaturdays(6).map((d) => ({ date: d, label: satLabel(d), count: counts.get(d) ?? 0 }));
   const hasVolunteers = reg.volunteers.size > 0;
-  // No week chosen yet → don't build the list; the page shows only the week picker.
+  // A week is only "chosen" once it's in the URL; until then the template hides the availability
+  // table. But the full volunteer list is ALWAYS built — the draft editor resolves assigned names
+  // from it, and after ?/generate the URL no longer carries the date. Only the per-person
+  // available/requests flags depend on the week's poll.
   const date = url.searchParams.get('date');
-  if (!date) return { volunteers: [], weeks, date: null, pollCount: 0, hasVolunteers };
-  const poll = getPollForDate(date);
+  const poll = date ? getPollForDate(date) : [];
   const pollById = new Map(poll.map((p) => [p.athleteId, p]));
   const volunteers = [...reg.volunteers.values()]
     .sort((a, b) => fullName(a).localeCompare(fullName(b)))

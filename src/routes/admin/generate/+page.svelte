@@ -22,9 +22,7 @@
     </label>
   </form>
 
-  {#if !data.date}
-    <p class="muted">Pick a week above to see who's available and generate a draft.</p>
-  {:else}
+  {#if data.date}
   <form method="POST" action="?/generate">
     <input type="hidden" name="date" value={data.date} />
     <p class="muted small">Generating for <strong>{data.date}</strong> — ticked from the poll; adjust as needed.</p>
@@ -51,6 +49,8 @@
 
     <p><button type="submit">Generate draft</button></p>
   </form>
+  {:else if !g}
+    <p class="muted">Pick a week above to see who's available and generate a draft.</p>
   {/if}
 {/if}
 
